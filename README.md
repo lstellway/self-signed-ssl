@@ -1,28 +1,28 @@
-#Self Signed TLS
+# Self Signed TLS
 
 Generate self-signed TLS certificate using OpenSSL
 
-##Usage
+## Usage
 >[OPTIONS] -c=US --state=California
 
-##Options
-  - -c|--country
+## Options
+  - **-c|--country**
     - Country Name (2 letter code)
-  - -s|--state
+  - **-s|--state**
     - State or Province Name (full name)
-  - -l|--locality
+  - **-l|--locality**
     - Locality Name (eg, city)
-  - -o|--organization
+  - **-o|--organization**
     - Organization Name (eg, company)
-  - -u|--unit
+  - **-u|--unit**
     - Organizational Unit Name (eg, section)
-  - -n|--common-name
+  - **-n|--common-name**
     - Common Name (e.g. server FQDN or YOUR name)
-  - -e|--email
+  - **-e|--email**
     - Email Address
-  - -p|--path
+  - **-p|--path**
     - Path to output generated keys
-  - -h|--help
+  - **-h|--help**
     - Display help and exit
-  - -v|--verbose
+  - **-v|--verbose**
     - Verbose output
