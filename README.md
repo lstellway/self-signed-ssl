@@ -3,7 +3,7 @@
 Generate self-signed TLS certificate using OpenSSL
 
 ## Usage
->[OPTIONS] -c=US --state=California
+>self-signed-tls [OPTIONS] -c=US --state=California
 
 ## Options
   - **-c|--country**
