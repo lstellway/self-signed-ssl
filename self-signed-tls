@@ -15,7 +15,6 @@ CN=""
 emailAddress=""
 OUTPATH="./"
 VERBOSE=0
-LONGOPTIONS=:country,state,locality,organization,unit,common-name,email,help,verbose
 
 safeExit() {
   if [ -d $tmp ]; then
