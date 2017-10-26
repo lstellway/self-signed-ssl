@@ -6,13 +6,6 @@ tmp=`mktemp -d`
 scriptName=`basename $0`
 
 # Certificate Variables
-C=""
-ST=""
-L=""
-O=""
-OU=""
-CN=""
-emailAddress=""
 OUTPATH="./"
 VERBOSE=0
 
@@ -79,43 +72,43 @@ done
 # Prompt for variables that were not provided in arguments
 checkVariables() {
   # Country
-  if [[ $C -eq "" ]]; then
+  if [ -z $C ]; then
     echo -n "Country Name (2 letter code) [AU]:"
     read C
   fi
 
   # State
-  if [[ $ST -eq "" ]]; then
+  if [ -z $ST ]; then
     echo -n "State or Province Name (full name) [Some-State]:"
     read ST
   fi
 
   # Locality
-  if [[ $L -eq "" ]]; then
+  if [ -z $L ]; then
     echo -n "Locality Name (eg, city) []:"
     read L
   fi
 
   # Organization
-  if [[ $O -eq "" ]]; then
+  if [ -z $O ]; then
     echo -n "Organization Name (eg, company) [Internet Widgits Pty Ltd]:"
     read O
   fi
 
   # Organizational Unit
-  if [[ $OU -eq "" ]]; then
+  if [ -z $OU ]; then
     echo -n "Organizational Unit Name (eg, section) []:"
     read OU
   fi
 
   # Common Name
-  if [[ $CN -eq "" ]]; then
+  if [ -z $CN ]; then
     echo -n "Common Name (e.g. server FQDN or YOUR name) []:"
     read CN
   fi
 
   # Common Name
-  if [[ $emailAddress -eq "" ]]; then
+  if [ -z $emailAddress ]; then
     echo -n "Email Address []:"
     read emailAddress
   fi
