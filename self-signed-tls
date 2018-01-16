@@ -177,6 +177,8 @@ EOF
 
 # Build TLS Certificate
 build() {
+  # Santizie domain name for file name
+  FILENAME=${CN/\*\./}
   # Generate CA key & crt
   openssl genrsa -out ${tmp}/tmp.key 2048
   openssl req -x509 -new -nodes -key ${tmp}/tmp.key -sha256 -days ${DURATION} -out ${tmp}/tmp.pem -subj "/C=${C}/ST=${ST}/L=${L}/O=${O}/OU=${OU}/CN=${CN}/emailAddress=${emailAddress}"
@@ -188,10 +190,10 @@ build() {
   buildExtCnf
 
   # Server key
-  openssl req -new -sha256 -nodes -out ${OUTPATH}${CN}.csr -newkey rsa:2048 -keyout ${OUTPATH}${CN}.key -config <( cat ${tmp}/tmp.csr.cnf )
+  openssl req -new -sha256 -nodes -out ${OUTPATH}${FILENAME}.csr -newkey rsa:2048 -keyout ${OUTPATH}${FILENAME}.key -config <( cat ${tmp}/tmp.csr.cnf )
 
   # Server certificate
-  openssl x509 -req -in ${OUTPATH}${CN}.csr -CA ${tmp}/tmp.pem -CAkey ${tmp}/tmp.key -CAcreateserial -out ${OUTPATH}${CN}.crt -days ${DURATION} -sha256 -extfile ${tmp}/v3.ext
+  openssl x509 -req -in ${OUTPATH}${FILENAME}.csr -CA ${tmp}/tmp.pem -CAkey ${tmp}/tmp.key -CAcreateserial -out ${OUTPATH}${FILENAME}.crt -days ${DURATION} -sha256 -extfile ${tmp}/v3.ext
 }
 
 checkVariables
