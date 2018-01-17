@@ -181,7 +181,7 @@ build() {
   FILENAME=${CN/\*\./}
   # Generate CA key & crt
   openssl genrsa -out ${tmp}/tmp.key 2048
-  openssl req -x509 -new -nodes -key ${tmp}/tmp.key -sha256 -days ${DURATION} -out ${OUTPATH}${CN}_CA.pem -subj "/C=${C}/ST=${ST}/L=${L}/O=${O}/OU=${OU}/CN=${CN}/emailAddress=${emailAddress}"
+  openssl req -x509 -new -nodes -key ${tmp}/tmp.key -sha256 -days ${DURATION} -out ${OUTPATH}${FILENAME}_CA.pem -subj "/C=${C}/ST=${ST}/L=${L}/O=${O}/OU=${OU}/CN=${CN}/emailAddress=${emailAddress}"
 
   # CSR Configuration
   buildCsrCnf
