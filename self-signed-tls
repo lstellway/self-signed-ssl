@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Directories
-cur=`pwd`
-tmp=`mktemp -d`
-scriptName=`basename $0`
+cur=$(pwd)
+tmp=$(mktemp -d)
+scriptName=$(basename "$0")
 
 # Certificate Variables
 OUTPATH="./"
@@ -11,11 +11,11 @@ VERBOSE=0
 DURATION=3650 # 10 years
 
 safeExit() {
-  if [ -d $tmp ]; then
+  if [ -d "$tmp" ]; then
     if [ $VERBOSE -eq 1 ]; then
       echo "Removing temporary directory '${tmp}'"
     fi
-    rm -rf $tmp
+    rm -rf "$tmp"
   fi
 
   trap - INT TERM EXIT
@@ -53,8 +53,8 @@ testPath() {
 
 # Process Arguments
 while [ "$1" != "" ]; do
-  PARAM=`echo $1 | awk -F= '{print $1}'`
-  VALUE=`echo $1 | awk -F= '{print $2}'`
+  PARAM=$(echo "$1" | awk -F= '{print $1}')
+  VALUE=$(echo "$1" | awk -F= '{print $2}')
   case $PARAM in
     -h|--help) help; safeExit ;;
     -c|--country) C=$VALUE ;;
@@ -75,45 +75,45 @@ done
 # Prompt for variables that were not provided in arguments
 checkVariables() {
   # Country
-  if [ -z $C ]; then
+  if [ -z "$C" ]; then
     echo -n "Country Name (2 letter code) [AU]:"
-    read C
+    read -r C
   fi
 
   # State
-  if [ -z $ST ]; then
+  if [ -z "$ST" ]; then
     echo -n "State or Province Name (full name) [Some-State]:"
-    read ST
+    read -r ST
   fi
 
   # Locality
-  if [ -z $L ]; then
+  if [ -z "$L" ]; then
     echo -n "Locality Name (eg, city) []:"
-    read L
+    read -r L
   fi
 
   # Organization
-  if [ -z $O ]; then
+  if [ -z "$O" ]; then
     echo -n "Organization Name (eg, company) [Internet Widgits Pty Ltd]:"
-    read O
+    read -r O
   fi
 
   # Organizational Unit
-  if [ -z $OU ]; then
+  if [ -z "$OU" ]; then
     echo -n "Organizational Unit Name (eg, section) []:"
-    read OU
+    read -r OU
   fi
 
   # Common Name
-  if [ -z $CN ]; then
+  if [ -z "$CN" ]; then
     echo -n "Common Name (e.g. server FQDN or YOUR name) []:"
-    read CN
+    read -r CN
   fi
 
-  # Common Name
-  if [ -z $emailAddress ]; then
+  # Email Address
+  if [ -z "$emailAddress" ]; then
     echo -n "Email Address []:"
-    read emailAddress
+    read -r emailAddress
   fi
 }
 
@@ -133,19 +133,19 @@ showVals() {
 
 # Init
 init() {
-  cd $tmp
+  cd "$tmp" || exit
   pwd
 }
 
 # Cleanup
 cleanup() {
   echo "Cleaning up"
-  cd $cur
-  rm -rf $tmp
+  cd "$cur" || exit
+  rm -rf "$tmp"
 }
 
 buildCsrCnf() {
-cat << EOF > ${tmp}/tmp.csr.cnf
+cat << EOF > "${tmp}/tmp.csr.cnf"
 [req]
 default_bits = 2048
 prompt = no
@@ -164,7 +164,7 @@ EOF
 }
 
 buildExtCnf() {
-cat << EOF > ${tmp}/v3.ext
+cat << EOF > "${tmp}/v3.ext"
 authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
 keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
@@ -180,8 +180,8 @@ build() {
   # Santizie domain name for file name
   FILENAME=${CN/\*\./}
   # Generate CA key & crt
-  openssl genrsa -out ${tmp}/tmp.key 2048
-  openssl req -x509 -new -nodes -key ${tmp}/tmp.key -sha256 -days ${DURATION} -out ${OUTPATH}${FILENAME}_CA.pem -subj "/C=${C}/ST=${ST}/L=${L}/O=${O}/OU=${OU}/CN=${CN}/emailAddress=${emailAddress}"
+  openssl genrsa -out "${tmp}/tmp.key" 2048
+  openssl req -x509 -new -nodes -key "${tmp}/tmp.key" -sha256 -days "${DURATION}" -out "${OUTPATH}${FILENAME}_CA.pem" -subj "/C=${C}/ST=${ST}/L=${L}/O=${O}/OU=${OU}/CN=${CN}/emailAddress=${emailAddress}"
 
   # CSR Configuration
   buildCsrCnf
@@ -190,10 +190,10 @@ build() {
   buildExtCnf
 
   # Server key
-  openssl req -new -sha256 -nodes -out ${OUTPATH}${FILENAME}.csr -newkey rsa:2048 -keyout ${OUTPATH}${FILENAME}.key -config <( cat ${tmp}/tmp.csr.cnf )
+  openssl req -new -sha256 -nodes -out "${OUTPATH}${FILENAME}.csr" -newkey rsa:2048 -keyout "${OUTPATH}${FILENAME}.key" -config <( cat "${tmp}/tmp.csr.cnf" )
 
   # Server certificate
-  openssl x509 -req -in ${OUTPATH}${FILENAME}.csr -CA ${OUTPATH}${FILENAME}_CA.pem -CAkey ${tmp}/tmp.key -CAcreateserial -out ${OUTPATH}${FILENAME}.crt -days ${DURATION} -sha256 -extfile ${tmp}/v3.ext
+  openssl x509 -req -in "${OUTPATH}${FILENAME}.csr" -CA "${OUTPATH}${FILENAME}_CA.pem" -CAkey "${tmp}/tmp.key" -CAcreateserial -out "${OUTPATH}${FILENAME}.crt" -days "${DURATION}" -sha256 -extfile "${tmp}/v3.ext"
 }
 
 checkVariables
