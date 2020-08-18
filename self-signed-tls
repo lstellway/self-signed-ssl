@@ -40,6 +40,7 @@ Generate self-signed TLS certificate using OpenSSL
   -d|--duration        Validity duration of the certificate (in days)
   -h|--help            Display this help and exit
   -v|--verbose         Verbose output
+  -a|--authority-files Existing ca filename (without .key and .pem) to reuse
 "
 }
 
@@ -65,8 +66,9 @@ while [ "$1" != "" ]; do
     -n|--common-name) CN=$VALUE ;;
     -e|--email) emailAddress=$VALUE ;;
     -p|--path) OUTPATH=$VALUE; testPath ;;
-	-d|--duration) DURATION=$VALUE ;;
+    -d|--duration) DURATION=$VALUE ;;
     -v|--verbose) VERBOSE=1 ;;
+    -a|--authority-files) CA=$VALUE ;;
     *) echo "ERROR: unknown parameter \"$PARAM\""; help; exit 1 ;;
   esac
   shift
@@ -129,6 +131,7 @@ showVals() {
   echo "Output Path: ${OUTPATH}";
   echo "Certificate Duration (Days): ${DURATION}";
   echo "Verbose: ${VERBOSE}";
+  echo "Certificate Authority files: ${CA}(.key,.pem)";
 }
 
 # Init
@@ -180,8 +183,15 @@ build() {
   # Santizie domain name for file name
   FILENAME=${CN/\*\./}
   # Generate CA key & crt
-  openssl genrsa -out "${tmp}/tmp.key" 2048
-  openssl req -x509 -new -nodes -key "${tmp}/tmp.key" -sha256 -days "${DURATION}" -out "${OUTPATH}${FILENAME}_CA.pem" -subj "/C=${C}/ST=${ST}/L=${L}/O=${O}/OU=${OU}/CN=${CN}/emailAddress=${emailAddress}"
+  if [ -z "${CA}" ]; then
+    CAKEYFILE="${tmp}/tmp.key"
+    CAPEMFILE="${OUTPATH}${FILENAME}_CA.pem"
+    openssl genrsa -out "${CAKEYFILE}" 2048
+    openssl req -x509 -new -nodes -key "${CAKEYFILE}" -sha256 -days "${DURATION}" -out "${OUTPATH}${FILENAME}_CA.pem" -subj "/C=${C}/ST=${ST}/L=${L}/O=${O}/OU=${OU}/CN=${CN}/emailAddress=${emailAddress}"
+  else
+    CAKEYFILE="${CA}.key"
+    CAPEMFILE="${CA}.pem"
+  fi
 
   # CSR Configuration
   buildCsrCnf
@@ -193,7 +203,7 @@ build() {
   openssl req -new -sha256 -nodes -out "${OUTPATH}${FILENAME}.csr" -newkey rsa:2048 -keyout "${OUTPATH}${FILENAME}.key" -config <( cat "${tmp}/tmp.csr.cnf" )
 
   # Server certificate
-  openssl x509 -req -in "${OUTPATH}${FILENAME}.csr" -CA "${OUTPATH}${FILENAME}_CA.pem" -CAkey "${tmp}/tmp.key" -CAcreateserial -out "${OUTPATH}${FILENAME}.crt" -days "${DURATION}" -sha256 -extfile "${tmp}/v3.ext"
+  openssl x509 -req -in "${OUTPATH}${FILENAME}.csr" -CA "${CAPEMFILE}" -CAkey "${CAKEYFILE}" -CAcreateserial -out "${OUTPATH}${FILENAME}.crt" -days "${DURATION}" -sha256 -extfile "${tmp}/v3.ext"
 }
 
 checkVariables
