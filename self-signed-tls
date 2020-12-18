@@ -35,6 +35,7 @@ Generate self-signed TLS certificate using OpenSSL
   -o|--organization    Organization Name (eg, company)
   -u|--unit            Organizational Unit Name (eg, section)
   -n|--common-name     Common Name (e.g. server FQDN or YOUR name)
+  --san                Comma-delimited list of subject alternative names
   -e|--email           Email Address
   -p|--path            Path to output generated keys
   -d|--duration        Validity duration of the certificate (in days)
@@ -63,9 +64,10 @@ while [ "$1" != "" ]; do
     -o|--organization) O=$VALUE ;;
     -u|--unit) OU=$VALUE ;;
     -n|--common-name) CN=$VALUE ;;
+    --san) SAN=$VALUE ;;
     -e|--email) emailAddress=$VALUE ;;
     -p|--path) OUTPATH=$VALUE; testPath ;;
-	-d|--duration) DURATION=$VALUE ;;
+  	-d|--duration) DURATION=$VALUE ;;
     -v|--verbose) VERBOSE=1 ;;
     *) echo "ERROR: unknown parameter \"$PARAM\""; help; exit 1 ;;
   esac
@@ -110,6 +112,19 @@ checkVariables() {
     read -r CN
   fi
 
+  # Subject Alternative Names
+  while IFS=','; read -ra URL; do
+    i=0
+    SAN=""
+    for u in "${URL[@]}"; do
+      u="${u// /}"
+      if [[ ! -z "$u" ]]; then
+        i=$((i+1))
+        SAN="${SAN}DNS.${i} = ${u}"$'\n'
+      fi
+    done
+  done <<< "${CN},${SAN}"
+
   # Email Address
   if [ -z "$emailAddress" ]; then
     echo -n "Email Address []:"
@@ -125,6 +140,7 @@ showVals() {
   echo "Organization: ${O}";
   echo "Organization Unit: ${OU}";
   echo "Common Name: ${CN}";
+  echo "Subject Alternate Names: ${SAN}";
   echo "Email: ${emailAddress}";
   echo "Output Path: ${OUTPATH}";
   echo "Certificate Duration (Days): ${DURATION}";
@@ -171,7 +187,7 @@ keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = ${CN}
+${SAN}
 EOF
 }
 
