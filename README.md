@@ -24,6 +24,8 @@ Generate self-signed TLS certificate using OpenSSL
     - Email Address
   - **-p|--path**
     - Path to output generated keys
+  - **-d|--duration**
+    - Validity duration of the certificate (in days)
   - **-h|--help**
     - Display help and exit
   - **-v|--verbose**
