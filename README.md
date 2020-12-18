@@ -18,6 +18,8 @@ Generate self-signed TLS certificate using OpenSSL
     - Organizational Unit Name (eg, section)
   - **-n|--common-name**
     - Common Name (e.g. server FQDN or YOUR name)
+  - **--san**
+    - Comma-delimited list of subject alternative names
   - **-e|--email**
     - Email Address
   - **-p|--path**
