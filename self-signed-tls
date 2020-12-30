@@ -113,6 +113,11 @@ checkVariables() {
   fi
 
   # Subject Alternative Names
+  if [ -z "$SAN" ]; then
+    echo -n "Subject Alternative Name(s) (e.g. subdomains) []:"
+    read -r SAN
+  fi
+
   while IFS=','; read -ra URL; do
     i=0
     SAN=""
