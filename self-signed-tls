@@ -63,7 +63,7 @@ while [ "$1" != "" ]; do
     -l|--locality) L=$VALUE ;;
     -o|--organization) O=$VALUE ;;
     -u|--unit) OU=$VALUE ;;
-    -n|--common-name) CN=$VALUE ;;
+    -n|--common-name) CN=$VALUE; HAS_CN=true ;;
     --san) SAN=$VALUE ;;
     -e|--email) emailAddress=$VALUE ;;
     -p|--path) OUTPATH=$VALUE; testPath ;;
@@ -113,7 +113,7 @@ checkVariables() {
   fi
 
   # Subject Alternative Names
-  if [ -z "$SAN" ]; then
+  if [ \( -z "$SAN"  -a -z "$HAS_CN" \) ]; then
     echo -n "Subject Alternative Name(s) (e.g. subdomains) []:"
     read -r SAN
   fi
