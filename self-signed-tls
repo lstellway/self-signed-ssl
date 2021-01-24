@@ -49,7 +49,6 @@ Options:
   -p|--path            Path to output generated files
   -d|--duration        Validity duration of the certificate (in days)
   -h|--help            Display this help and exit
-  -v|--verbose         Verbose output
 
   --ca-key             Path to certificate authority key file
                        (Generates new CA if not set)
@@ -101,7 +100,7 @@ _parse_vars() {
             -p|--path) OUT="$VALUE";;
             --path-create) CREATE_PATH=1;;
             -d|--duration) DAYS="$VALUE";;
-            -v|--verbose) VERBOSE=1;;
+            -v|--verbose) echo "Warn: -v|--verbose option is deprecated.";;
             *) echo "ERROR: unknown parameter \"$PARAM\""; help; _safe_exit 1 ;;
         esac
     done
