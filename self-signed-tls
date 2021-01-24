@@ -1,191 +1,247 @@
-#!/bin/bash
+#!/bin/sh
 
-# Directories
-cur=$(pwd)
-tmp=$(mktemp -d)
-scriptName=$(basename "$0")
+set -e
 
-# Certificate Variables
-OUTPATH="./"
-VERBOSE=0
-DURATION=3650 # 10 years
+# General defaults
+SCRIPT_NAME="$(basename ${0})"
+OUT=$(pwd)"/"
+CREATE_PATH=0
 
-safeExit() {
-  if [ -d "$tmp" ]; then
-    if [ $VERBOSE -eq 1 ]; then
-      echo "Removing temporary directory '${tmp}'"
-    fi
-    rm -rf "$tmp"
-  fi
+# Certificate authority defaults
+CA_KEY=""
+CA=""
+TRUST=""
+SUBJ=""
 
-  trap - INT TERM EXIT
-  exit
+# Signed certificate defaults
+DAYS=3650 # 10 years
+C=""
+S=""
+L=""
+O=""
+OU=""
+CN=""
+SAN=""
+EMAIL=""
+
+# Safe exit
+_safe_exit() {
+    trap - INT TERM EXIT
+    exit $@
 }
 
 # Help Screen
 help() {
-  echo -n "${scriptName} [OPTIONS] -c=US --state=California
+  echo "
 
-Generate self-signed TLS certificate using OpenSSL
+Generate self-signed TLS certificate authority and signed certificate using OpenSSL
 
- Options:
+${SCRIPT_NAME} [OPTIONS]
+
+
+Examples:
+
+${SCRIPT_NAME} --trust -c US -s California -l 'Los\ Angeles' -o 'Example\ Org' -u 'Example\ Unit'
+${SCRIPT_NAME} --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
+
+
+Options:
+  -p|--path            Path to output generated files
+  -d|--duration        Validity duration of the certificate (in days)
+  -h|--help            Display this help and exit
+  -v|--verbose         Verbose output
+
+  --ca-key             Path to certificate authority key file
+                       (Generates new CA if not set)
+  --ca-cert            Path to certificate authority cert file
+                       (Generates new CA if not set)
+  -t|--trust           Flag to trust certificate authority
+                       (Do not set for default 'false')
+
   -c|--country         Country Name (2 letter code)
   -s|--state           State or Province Name (full name)
   -l|--locality        Locality Name (eg, city)
   -o|--organization    Organization Name (eg, company)
   -u|--unit            Organizational Unit Name (eg, section)
   -n|--common-name     Common Name (e.g. server FQDN or YOUR name)
-  --san                Comma-delimited list of subject alternative names
+  -a|--san             Comma-delimited list of subject alternative names
   -e|--email           Email Address
-  -p|--path            Path to output generated keys
-  -d|--duration        Validity duration of the certificate (in days)
-  -h|--help            Display this help and exit
-  -v|--verbose         Verbose output
+
 "
 }
 
-# Test output path is valid
-testPath() {
-  if [ ! -d $OUTPATH ]; then
-    echo "The specified directory \"${OUTPATH}\" does not exist"
-    exit 1
-  fi
-}
+# Parse variables
+_parse_vars() {
+    while [ -n "$1" ]; do
+        # Parse argument
+        if [ "${1:0:2}" == "--" -o "${1:2:1}" == "=" ]; then
+            PARAM=$(echo "$1" | awk -F= '{print $1}')
+            VALUE=$(echo "$1" | awk -F= '{print $2}')
+            shift
+        else
+            PARAM="$1"
+            VALUE="$2"
+            shift 2
+        fi
 
-# Process Arguments
-while [ "$1" != "" ]; do
-  PARAM=$(echo "$1" | awk -F= '{print $1}')
-  VALUE=$(echo "$1" | awk -F= '{print $2}')
-  case $PARAM in
-    -h|--help) help; safeExit ;;
-    -c|--country) C=$VALUE ;;
-    -s|--state) ST=$VALUE ;;
-    -l|--locality) L=$VALUE ;;
-    -o|--organization) O=$VALUE ;;
-    -u|--unit) OU=$VALUE ;;
-    -n|--common-name) CN=$VALUE; HAS_CN=true ;;
-    --san) SAN=$VALUE ;;
-    -e|--email) emailAddress=$VALUE ;;
-    -p|--path) OUTPATH=$VALUE; testPath ;;
-  	-d|--duration) DURATION=$VALUE ;;
-    -v|--verbose) VERBOSE=1 ;;
-    *) echo "ERROR: unknown parameter \"$PARAM\""; help; exit 1 ;;
-  esac
-  shift
-done
-
-# Prompt for variables that were not provided in arguments
-checkVariables() {
-  # Country
-  if [ -z "$C" ]; then
-    echo -n "Country Name (2 letter code) [AU]:"
-    read -r C
-  fi
-
-  # State
-  if [ -z "$ST" ]; then
-    echo -n "State or Province Name (full name) [Some-State]:"
-    read -r ST
-  fi
-
-  # Locality
-  if [ -z "$L" ]; then
-    echo -n "Locality Name (eg, city) []:"
-    read -r L
-  fi
-
-  # Organization
-  if [ -z "$O" ]; then
-    echo -n "Organization Name (eg, company) [Internet Widgits Pty Ltd]:"
-    read -r O
-  fi
-
-  # Organizational Unit
-  if [ -z "$OU" ]; then
-    echo -n "Organizational Unit Name (eg, section) []:"
-    read -r OU
-  fi
-
-  # Common Name
-  if [ -z "$CN" ]; then
-    echo -n "Common Name (e.g. server FQDN or YOUR name) []:"
-    read -r CN
-  fi
-
-  # Subject Alternative Names
-  if [ \( -z "$SAN"  -a -z "$HAS_CN" \) ]; then
-    echo -n "Subject Alternative Name(s) (e.g. subdomains) []:"
-    read -r SAN
-  fi
-
-  while IFS=','; read -ra URL; do
-    i=0
-    SAN=""
-    for u in "${URL[@]}"; do
-      u="${u// /}"
-      if [[ -n "$u" ]]; then
-        i=$((i+1))
-        SAN="${SAN}DNS.${i} = ${u}"$'\n'
-      fi
+        # Map values
+        case $PARAM in
+            -h|--help) help; _safe_exit;;
+            --ca-key) CA_KEY="$VALUE";;
+            --ca-cert) CA="$VALUE";;
+            -t|--trust) TRUST=1;;
+            -c|--country) C="$VALUE";;
+            -s|--state) ST="$VALUE";;
+            -l|--locality) L="$VALUE";;
+            -o|--organization) O="$VALUE";;
+            -u|--unit) OU="$VALUE";;
+            -n|--common-name) CN="$VALUE"; HAS_CN=true;;
+            -a|--san) SAN="$VALUE";;
+            -e|--email) EMAIL="$VALUE";;
+            -p|--path) OUT="$VALUE";;
+            --path-create) CREATE_PATH=1;;
+            -d|--duration) DAYS="$VALUE";;
+            -v|--verbose) VERBOSE=1;;
+            *) echo "ERROR: unknown parameter \"$PARAM\""; help; _safe_exit 1 ;;
+        esac
     done
-  done <<< "${CN},${SAN}"
-
-  # Email Address
-  if [ -z "$emailAddress" ]; then
-    echo -n "Email Address []:"
-    read -r emailAddress
-  fi
 }
 
-# Show variable values
-showVals() {
-  echo "Country: ${C}";
-  echo "State: ${ST}";
-  echo "Locality: ${L}";
-  echo "Organization: ${O}";
-  echo "Organization Unit: ${OU}";
-  echo "Common Name: ${CN}";
-  echo "Subject Alternate Names: ${SAN}";
-  echo "Email: ${emailAddress}";
-  echo "Output Path: ${OUTPATH}";
-  echo "Certificate Duration (Days): ${DURATION}";
-  echo "Verbose: ${VERBOSE}";
+# Prompt for required variables that were not provided
+_check_vars() {
+    # Certificate authority files
+    if [ -n "$CA_KEY" -a -n "$CA" ]; then
+        if [ ! -f "$CA_KEY" ]; then
+            echo "The specified certificate authorify key file does not exist"
+            _safe_exit 1
+        fi
+
+        if [ ! -f "$CA" ]; then
+            echo "The specified certificate authorify file does not exist"
+            _safe_exit 1
+        fi
+    fi
+
+    # Country
+    if [ -z "$C" ]; then
+        printf "Country Name (2 letter code) [AU]: "
+        read -r C
+    fi
+
+    # State
+    if [ -z "$ST" ]; then
+        printf "State or Province Name (full name) [Some-State]: "
+        read -r ST
+    fi
+
+    # Locality
+    if [ -z "$L" ]; then
+        printf "Locality Name (eg, city) []: "
+        read -r L
+    fi
+
+    # Organization
+    if [ -z "$O" ]; then
+        printf "Organization Name (eg, company) [Internet Widgits Pty Ltd]: "
+        read -r O
+    fi
+
+    # Organizational Unit
+    if [ -z "$OU" ]; then
+        printf "Organizational Unit Name (eg, section) []: "
+        read -r OU
+    fi
+
+    # Common Name
+    if [ -z "$CN" ]; then
+        printf "Common Name (e.g. server FQDN or YOUR name) []: "
+        read -r CN
+    fi
+
+    # Subject Alternative Names
+    if [ -z "$SAN" -a -z "$HAS_CN" ]; then
+        printf "Subject Alternative Name(s) (e.g. subdomains) []: "
+        read -r SAN
+    fi
+
+    # Build DNS
+    i=0; read -r -a URLS <<< "${CN} ${SAN//,/ }"; SAN="";
+    for u in "${URLS[@]}"; do
+        if [ -n "$u" ]; then
+            i=$((i+1))
+            SAN="${SAN}DNS.${i} = ${u// /}"$'\n'
+        fi
+    done
+
+    # Email Address
+    if [ -z "$EMAIL" ]; then
+        printf "Email Address []: "
+        read -r EMAIL
+    fi
+
+    # Check if output directory exists
+    if [ ! -d "$OUT" ]; then
+        if [ $CREATE_PATH -eq 1 ]; then
+            # Create path
+            mkdir -p "$OUT" || echo "Could not create directory \"${OUT}\"" && _safe_exit 1
+        else
+            # Report non-existent path
+            echo "The specified directory \"${OUT}\" does not exist"
+            _safe_exit 1
+        fi
+    fi
+
+    SUBJ="/C=${C}/ST=${ST}/L=${L}/O=${O}/OU=${OU}/CN=${CN}/emailAddress=${EMAIL}"
 }
 
-# Init
-init() {
-  cd "$tmp" || exit
-  pwd
+# Trust certificate authority
+_add_trusted_cert() {
+    if [ -z "$TRUST" ]; then
+        return
+    fi
+
+    case "${OSTYPE:-undefined}" in
+        # MacOS
+        darwin*) sudo security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" "$CA";;
+        # linux*) ;;
+        *) echo "Unsupported OSTYPE '${OSTYPE:-undefined}'";;
+    esac
 }
 
-# Cleanup
-cleanup() {
-  echo "Cleaning up"
-  cd "$cur" || exit
-  rm -rf "$tmp"
+# Build certificate authority
+_build_ca() {
+    CA_KEY="${OUT}CA.key"
+    CA="${OUT}CA.pem"
+
+    # Use existing CA in current directory
+    if [ -f "$CA_KEY" -a -f "$CA" ]; then
+        return
+    fi
+
+    # Generate certificate authority files
+    openssl genrsa -out "$CA_KEY" 2048
+    openssl req -new -nodes -x509 -sha256 \
+        -days "$DAYS" \
+        -subj "$SUBJ" \
+        -key "$CA_KEY" \
+        -out "$CA"
+
+    # Trust certificate
+    _add_trusted_cert
 }
 
-buildCsrCnf() {
-cat << EOF > "${tmp}/tmp.csr.cnf"
-[req]
-default_bits = 2048
-prompt = no
-default_md = sha256
-distinguished_name = dn
+# Sign certificate
+_build_cert() {
+    FILE=${CN/\*\./}
 
-[dn]
-C=${C}
-ST=${ST}
-L=${L}
-O=${O}
-OU=${OU}
-CN=${CN}
-emailAddress=${emailAddress}
-EOF
-}
+    # Check certificate authority
+    if [ -z "$CA" -o -z "$CA_KEY" ]; then
+        echo "Building certificate authority"
+        _build_ca
+    fi
 
-buildExtCnf() {
-cat << EOF > "${tmp}/v3.ext"
+    # Build 
+    cat << EOF > "${OUT}${FILE}.ext"
 authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
 keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
@@ -194,30 +250,29 @@ subjectAltName = @alt_names
 [alt_names]
 ${SAN}
 EOF
+
+    # Generate key and certificate signing request
+    openssl genrsa -out "${OUT}${FILE}.key" 2048
+    openssl req -new -nodes \
+        -sha256 \
+        -newkey rsa:2048 \
+        -subj "$SUBJ" \
+        -key "${OUT}${FILE}.key" \
+        -out "${OUT}${FILE}.csr"
+
+    # Create a signed certificate
+    openssl x509 -req -sha256 -CAcreateserial \
+        -CA "$CA" \
+        -CAkey "$CA_KEY" \
+        -days "$DAYS" \
+        -extfile "${OUT}${FILE}.ext" \
+        -in "${OUT}${FILE}.csr" \
+        -out "${OUT}${FILE}.crt"
+
+    rm -f "${OUT}${FILE}.ext"
 }
 
-# Build TLS Certificate
-build() {
-  # Santizie domain name for file name
-  FILENAME=${CN/\*\./}
-  # Generate CA key & crt
-  openssl genrsa -out "${tmp}/tmp.key" 2048
-  openssl req -x509 -new -nodes -key "${tmp}/tmp.key" -sha256 -days "${DURATION}" -out "${OUTPATH}${FILENAME}_CA.pem" -subj "/C=${C}/ST=${ST}/L=${L}/O=${O}/OU=${OU}/CN=${CN}/emailAddress=${emailAddress}"
-
-  # CSR Configuration
-  buildCsrCnf
-
-  # Create v3.ext configuration file
-  buildExtCnf
-
-  # Server key
-  openssl req -new -sha256 -nodes -out "${OUTPATH}${FILENAME}.csr" -newkey rsa:2048 -keyout "${OUTPATH}${FILENAME}.key" -config <( cat "${tmp}/tmp.csr.cnf" )
-
-  # Server certificate
-  openssl x509 -req -in "${OUTPATH}${FILENAME}.csr" -CA "${OUTPATH}${FILENAME}_CA.pem" -CAkey "${tmp}/tmp.key" -CAcreateserial -out "${OUTPATH}${FILENAME}.crt" -days "${DURATION}" -sha256 -extfile "${tmp}/v3.ext"
-}
-
-checkVariables
-build
-# showVals
-safeExit
+_parse_vars "$@"
+_check_vars
+_build_cert
+_safe_exit
