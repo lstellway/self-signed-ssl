@@ -14,7 +14,7 @@ TRUST=""
 SUBJ=""
 
 # Signed certificate defaults
-DAYS=3650 # 10 years
+DAYS=365 # 1 year
 C=""
 S=""
 L=""
