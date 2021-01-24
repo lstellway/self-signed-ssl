@@ -2,6 +2,8 @@
 
 Generate self-signed TLS certificate authority and signed certificate using OpenSSL.
 
+<br />
+
 ## Usage
 
 ```
@@ -15,6 +17,8 @@ self-signed-tls --trust -c US -s California -l 'Los Angeles' -o 'Example Org' -u
 self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 ```
 
+<br />
+
 ## Options
 
 **General**
@@ -26,6 +30,8 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 -   **-d|--duration**
     -   Validity duration of the certificate (in days)
 
+<br />
+
 **Certificate Authority**
 
 -   **--ca-key**
@@ -34,6 +40,8 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
     -   Path to certificate authority cert file <br />_(Generates new CA if not set)_
 -   **-t|--trust**
     -   Flag to trust certificate authority _(requires `sudo` privileges)_<br />_(Do not set for default 'false')_
+
+<br />
 
 **Certificate Subject**
 
