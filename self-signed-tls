@@ -216,9 +216,6 @@ _check_vars() {
     if [ -n "$EMAIL" ]; then
         SUBJ="${SUBJ}/emailAddress=${EMAIL}"
     fi
-    if [ -n "$SUBJ" ]; then
-        SUBJ="-subj ${SUBJ}"
-    fi
 }
 
 # Trust certificate authority
@@ -248,7 +245,7 @@ _build_ca() {
     # Generate certificate authority files
     openssl genrsa -out "$CA_KEY" 2048
     openssl req -new -nodes -x509 -sha256 \
-        $SUBJ \
+        -subj "$SUBJ" \
         -days "$DAYS" \
         -key "$CA_KEY" \
         -out "$CA"
@@ -281,7 +278,7 @@ EOF
     # Generate key and certificate signing request
     openssl genrsa -out "${OUT}${FILE}.key" 2048
     openssl req -new -nodes -sha256 \
-        $SUBJ \
+        -subj "$SUBJ" \
         -newkey rsa:2048 \
         -key "${OUT}${FILE}.key" \
         -out "${OUT}${FILE}.csr"
