@@ -32,20 +32,20 @@ _safe_exit() {
 
 # Help Screen
 help() {
-  echo "
+cat <<EOF
+${SCRIPT_NAME}
+This is script to simplify the creatiion of a certificate authority and self-signed TLS certificates using OpenSSL.
 
-Generate self-signed TLS certificate authority and signed certificate using OpenSSL
+
+Usage:
 
 ${SCRIPT_NAME} [OPTIONS]
-
-
-Examples:
-
 ${SCRIPT_NAME} --trust -c US -s California -l 'Los Angeles' -o 'Example Org' -u 'Example Unit'
 ${SCRIPT_NAME} --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 
 
 Options:
+
   -p|--path            Path to output generated files
   -d|--duration        Validity duration of the certificate (in days)
   -h|--help            Display this help and exit
@@ -65,12 +65,16 @@ Options:
   -n|--common-name     Common Name (e.g. server FQDN or YOUR name)
   -a|--san             Comma-delimited list of subject alternative names
   -e|--email           Email Address
-
-"
+EOF
 }
 
 # Parse variables
 _parse_vars() {
+    if [ $# -lt 1 ]; then
+        help
+        _safe_exit
+    fi
+
     while [ -n "$1" ]; do
         # Parse argument
         if [ "${1:0:2}" == "--" -o "${1:2:1}" == "=" ]; then

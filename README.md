@@ -1,6 +1,6 @@
 # Self Signed TLS
 
-Generate self-signed TLS certificate authority and signed certificate using OpenSSL.
+This is script to simplify the creatiion of a certificate authority and self-signed TLS certificates using OpenSSL.
 
 <br />
 
@@ -8,11 +8,6 @@ Generate self-signed TLS certificate authority and signed certificate using Open
 
 ```
 self-signed-tls [OPTIONS]
-```
-
-Examples
-
-```
 self-signed-tls --trust -c US -s California -l 'Los Angeles' -o 'Example Org' -u 'Example Unit'
 self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 ```
