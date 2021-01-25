@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -6,6 +6,7 @@ set -e
 SCRIPT_NAME="$(basename ${0})"
 OUT=$(pwd)"/"
 CREATE_PATH=0
+INTERACT=1
 
 # Certificate authority defaults
 CA_KEY=""
@@ -46,9 +47,10 @@ ${SCRIPT_NAME} --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 
 Options:
 
-  -p|--path            Path to output generated files
-  -d|--duration        Validity duration of the certificate (in days)
   -h|--help            Display this help and exit
+  -p|--path            Path to output generated files
+  --no-interaction     Disables interactive prompts for answers
+  -d|--duration        Validity duration of the certificate (in days)
 
   --ca-key             Path to certificate authority key file
                        (Generates new CA if not set)
@@ -96,6 +98,7 @@ _parse_vars() {
             -n|--common-name) CN="$VALUE"; HAS_CN=true;;
             -a|--san) SAN="$VALUE";;
             -e|--email) EMAIL="$VALUE";;
+            --no-interaction) INTERACT=0;;
             -p|--path) OUT="$VALUE";;
             --path-create) CREATE_PATH=1;;
             -d|--duration) DAYS="$VALUE";;
@@ -121,31 +124,31 @@ _check_vars() {
     fi
 
     # Country
-    if [ -z "$C" ]; then
+    if [ -z "$C" -a $INTERACT -eq 1 ]; then
         printf "Country Name (2 letter code) [AU]: "
         read -r C
     fi
 
     # State
-    if [ -z "$ST" ]; then
+    if [ -z "$ST" -a $INTERACT -eq 1 ]; then
         printf "State or Province Name (full name) [Some-State]: "
         read -r ST
     fi
 
     # Locality
-    if [ -z "$L" ]; then
+    if [ -z "$L" -a $INTERACT -eq 1 ]; then
         printf "Locality Name (eg, city) []: "
         read -r L
     fi
 
     # Organization
-    if [ -z "$O" ]; then
+    if [ -z "$O" -a $INTERACT -eq 1 ]; then
         printf "Organization Name (eg, company) [Internet Widgits Pty Ltd]: "
         read -r O
     fi
 
     # Organizational Unit
-    if [ -z "$OU" ]; then
+    if [ -z "$OU" -a $INTERACT -eq 1 ]; then
         printf "Organizational Unit Name (eg, section) []: "
         read -r OU
     fi
@@ -157,13 +160,15 @@ _check_vars() {
     fi
 
     # Subject Alternative Names
-    if [ -z "$SAN" -a -z "$HAS_CN" ]; then
+    if [ -z "$SAN" -a -z "$HAS_CN" -a $INTERACT -eq 1 ]; then
         printf "Subject Alternative Name(s) (e.g. subdomains) []: "
         read -r SAN
     fi
 
     # Build DNS
-    i=0; read -r -a URLS <<< "${CN} ${SAN//,/ }"; SAN="";
+    i=0
+    read -r -a URLS <<< "${CN} ${SAN//,/ }"
+    SAN=""
     for u in "${URLS[@]}"; do
         if [ -n "$u" ]; then
             i=$((i+1))
@@ -172,7 +177,7 @@ _check_vars() {
     done
 
     # Email Address
-    if [ -z "$EMAIL" ]; then
+    if [ -z "$EMAIL" -a $INTERACT -eq 1 ]; then
         printf "Email Address []: "
         read -r EMAIL
     fi
@@ -211,6 +216,9 @@ _check_vars() {
     if [ -n "$EMAIL" ]; then
         SUBJ="${SUBJ}/emailAddress=${EMAIL}"
     fi
+    if [ -n "$SUBJ" ]; then
+        SUBJ="-subj ${SUBJ}"
+    fi
 }
 
 # Trust certificate authority
@@ -240,8 +248,8 @@ _build_ca() {
     # Generate certificate authority files
     openssl genrsa -out "$CA_KEY" 2048
     openssl req -new -nodes -x509 -sha256 \
+        $SUBJ \
         -days "$DAYS" \
-        -subj "$SUBJ" \
         -key "$CA_KEY" \
         -out "$CA"
 
@@ -273,8 +281,8 @@ EOF
     # Generate key and certificate signing request
     openssl genrsa -out "${OUT}${FILE}.key" 2048
     openssl req -new -nodes -sha256 \
+        $SUBJ \
         -newkey rsa:2048 \
-        -subj "$SUBJ" \
         -key "${OUT}${FILE}.key" \
         -out "${OUT}${FILE}.csr"
 
