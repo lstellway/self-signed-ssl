@@ -244,7 +244,7 @@ _build_cert() {
     fi
 
     # Build 
-    cat << EOF > "${OUT}${FILE}.ext"
+    cat > "${OUT}${FILE}.ext" << EOF
 authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
 keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
@@ -256,8 +256,7 @@ EOF
 
     # Generate key and certificate signing request
     openssl genrsa -out "${OUT}${FILE}.key" 2048
-    openssl req -new -nodes \
-        -sha256 \
+    openssl req -new -nodes -sha256 \
         -newkey rsa:2048 \
         -subj "$SUBJ" \
         -key "${OUT}${FILE}.key" \
