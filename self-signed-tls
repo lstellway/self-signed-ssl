@@ -70,11 +70,6 @@ EOF
 
 # Parse variables
 _parse_vars() {
-    if [ $# -lt 1 ]; then
-        help
-        _safe_exit
-    fi
-
     while [ -n "$1" ]; do
         # Parse argument
         if [ "${1:0:2}" == "--" -o "${1:2:1}" == "=" ]; then
@@ -194,7 +189,28 @@ _check_vars() {
         fi
     fi
 
-    SUBJ="/C=${C}/ST=${ST}/L=${L}/O=${O}/OU=${OU}/CN=${CN}/emailAddress=${EMAIL}"
+    # Build subject
+    if [ -n "$C" ]; then
+        SUBJ="${SUBJ}/C=${C}"
+    fi
+    if [ -n "$ST" ]; then
+        SUBJ="${SUBJ}/ST=${ST}"
+    fi
+    if [ -n "$L" ]; then
+        SUBJ="${SUBJ}/L=${L}"
+    fi
+    if [ -n "$O" ]; then
+        SUBJ="${SUBJ}/O=${O}"
+    fi
+    if [ -n "$OU" ]; then
+        SUBJ="${SUBJ}/OU=${OU}"
+    fi
+    if [ -n "$CN" ]; then
+        SUBJ="${SUBJ}/CN=${CN}"
+    fi
+    if [ -n "$EMAIL" ]; then
+        SUBJ="${SUBJ}/emailAddress=${EMAIL}"
+    fi
 }
 
 # Trust certificate authority
