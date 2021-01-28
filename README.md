@@ -34,7 +34,7 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 -   **--ca-cert**
     -   Path to certificate authority cert file <br />_(Generates new CA if not set)_
 -   **-t|--trust**
-    -   Flag to trust certificate authority _(requires `sudo` privileges)_<br />_(Do not set for default 'false')_
+    -   Flag to trust certificate authority _(requires `sudo` privileges)_<br />_(Do not set for default 'false')_<br />_(Currently only supports Darwin / MacOS. Please feel free to contribute if you know how to trust a certificate on other systems.)_
 
 <br />
 
