@@ -77,8 +77,8 @@ _parse_vars() {
     while [ -n "$1" ]; do
         # Parse argument
         if [ "${1:0:2}" == "--" -o "${1:2:1}" == "=" ]; then
-            PARAM=$(echo "$1" | awk -F= '{print $1}')
-            VALUE=$(echo "$1" | awk -F= '{print $2}')
+            PARAM=${1%%=*}
+            VALUE=${1/$PARAM=/}
             shift
         else
             PARAM="$1"
