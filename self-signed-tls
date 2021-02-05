@@ -7,6 +7,7 @@ SCRIPT_NAME="$(basename ${0})"
 OUT=$(pwd)"/"
 CREATE_PATH=0
 INTERACT=1
+BITS=2048
 
 # Certificate authority defaults
 CA_KEY=""
@@ -51,6 +52,7 @@ Options:
   -p|--path            Path to output generated files
   --no-interaction     Disables interactive prompts for answers
   -d|--duration        Validity duration of the certificate (in days)
+  -b|--bits            Key size in bits (default '2048')
 
   --ca-key             Path to certificate authority key file
                        (Generates new CA if not set)
@@ -102,6 +104,7 @@ _parse_vars() {
             -p|--path) OUT="$VALUE";;
             --path-create) CREATE_PATH=1;;
             -d|--duration) DAYS="$VALUE";;
+            -b|--bits) BITS="$VALUE";;
             -v|--verbose) echo "Warn: -v|--verbose option is deprecated.";;
             *) echo "ERROR: unknown parameter \"$PARAM\""; help; _safe_exit 1 ;;
         esac
@@ -243,7 +246,7 @@ _build_ca() {
     fi
 
     # Generate certificate authority files
-    openssl genrsa -out "$CA_KEY" 2048
+    openssl genrsa -out "$CA_KEY" "$BITS"
     openssl req -new -nodes -x509 -sha256 \
         -subj "$SUBJ" \
         -days "$DAYS" \
@@ -276,10 +279,10 @@ ${SAN}
 EOF
 
     # Generate key and certificate signing request
-    openssl genrsa -out "${OUT}${FILE}.key" 2048
+    openssl genrsa -out "${OUT}${FILE}.key" "$BITS"
     openssl req -new -nodes -sha256 \
         -subj "$SUBJ" \
-        -newkey rsa:2048 \
+        -newkey "rsa:${BITS}" \
         -key "${OUT}${FILE}.key" \
         -out "${OUT}${FILE}.csr"
 

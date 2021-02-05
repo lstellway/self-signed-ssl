@@ -24,6 +24,8 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
     -   Path to output generated keys
 -   **-d|--duration**
     -   Validity duration of the certificate (in days)
+-   **-b|--bits**
+    -   Key size in bits (default `2048`)
 
 <br />
 
