@@ -1,6 +1,6 @@
 # Self Signed TLS
 
-This is script to simplify the creatiion of a certificate authority and self-signed TLS certificates using OpenSSL.
+This is script to simplify the creation of certificate authorities and self-signed TLS certificates using OpenSSL.
 
 <br />
 
@@ -18,14 +18,12 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 
 **General**
 
--   **-h|--help**
-    -   Display help and exit
--   **-p|--path**
-    -   Path to output generated keys
--   **-d|--duration**
-    -   Validity duration of the certificate (in days)
--   **-b|--bits**
-    -   Key size in bits (default `2048`)
+| Option | Description |
+| ------ | ----------- |
+| **-h|--help** | Display help and exit |
+| **-p|--path** | Path to output generated keys |
+| **-d|--duration** | Validity duration of the certificate (in days) |
+| **-b|--bits** | Key size in bits (default `2048`) |
 
 <br />
 
