@@ -2,6 +2,11 @@
 
 This is script to simplify the creation of certificate authorities and self-signed TLS certificates using OpenSSL.
 
+Resources
+
+- [OpenSSL 1.1.1 Manual](https://www.openssl.org/docs/man1.1.1/man1/)
+- [Submit Issues](https://github.com/loganstellway/self-signed-ssl/issues)
+
 <br />
 
 ## Usage
@@ -24,7 +29,7 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 | ------ | ----------- |
 | `-h` `--help` | Display help and exit |
 | `-p VALUE` `--path=VALUE` | Path to output generated keys |
-| `-d VALUE` `--duration=VALUE` | Validity duration of the certificate (in days) |
+| `-d VALUE` `--duration=VALUE` | Number of days the certificate is valid (default `365`) |
 | `-b VALUE` `--bits=VALUE` | Key size in bits (default `2048`) |
 
 <br />
