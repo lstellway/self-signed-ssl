@@ -2,11 +2,6 @@
 
 This is script to simplify the creation of certificate authorities and self-signed TLS certificates using OpenSSL.
 
-Resources
-
-- [OpenSSL 1.1.1 Manual](https://www.openssl.org/docs/man1.1.1/man1/)
-- [Submit Issues](https://github.com/loganstellway/self-signed-ssl/issues)
-
 <br />
 
 ## Usage
@@ -56,3 +51,12 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 | `-n VALUE` `--common-name=VALUE` | Common Name (e.g. server FQDN or YOUR name) |
 | `-a VALUE` `--san=VALUE` | Comma-delimited list of subject alternative names |
 | `-e VALUE` `--email=VALUE` | Email Address |
+
+<br />
+
+## Resources
+
+- [OpenSSL 1.1.1 Manual](https://www.openssl.org/docs/man1.1.1/man1/)
+- [Submit Issues](https://github.com/loganstellway/self-signed-ssl/issues)
+
+
