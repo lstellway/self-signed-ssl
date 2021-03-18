@@ -21,9 +21,9 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 | Option | Description |
 | ------ | ----------- |
 | `-h` `--help` | Display help and exit |
-| `-p` `--path` | Path to output generated keys |
-| `-d` `--duration` | Validity duration of the certificate (in days) |
-| `-b` `--bits` | Key size in bits (default `2048`) |
+| `-p STRING` `--path=STRING` | Path to output generated keys |
+| `-d NUMBER` `--duration=NUMBER` | Validity duration of the certificate (in days) |
+| `-b NUMBER` `--bits=NUMBER` | Key size in bits (default `2048`) |
 
 <br />
 
