@@ -16,6 +16,8 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 
 ## Options
 
+<br />
+
 **General**
 
 | Option | Description |
