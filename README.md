@@ -26,6 +26,7 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 | `-p VALUE` `--path=VALUE` | Path to output generated keys |
 | `-d VALUE` `--duration=VALUE` | Number of days the certificate is valid (default `365`) |
 | `-b VALUE` `--bits=VALUE` | Key size in bits (default `2048`) |
+| `--no-interaction` | Disables interactive prompts for unspecified variables. <br />_(OpenSSL may still prompt for values)_ |
 
 <br />
 
@@ -35,6 +36,7 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 | ------ | ----------- |
 | `--ca-key=VALUE` | Path to certificate authority key file <br/>_(Generates new CA if not set)_ |
 | `--ca-cert=VALUE` | Path to certificate authority cert file <br />_(Generates new CA if not set)_ |
+| `--ca-only` | Instructs script to generate a certificate authority, and not to generate a signed certificate |
 | `-t` `--trust` | Flag to trust certificate authority _(requires `sudo` privileges)_<br />_(Do not set for default 'false')_<br /><br />_Currently only supports Darwin / MacOS. <br />Please feel free to contribute if you know how to trust a certificate on other systems._ |
 
 <br />

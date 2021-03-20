@@ -12,6 +12,7 @@ BITS=2048
 # Certificate authority defaults
 CA_KEY=""
 CA=""
+CA_ONLY=""
 TRUST=""
 SUBJ=""
 
@@ -46,7 +47,7 @@ ${SCRIPT_NAME} --trust -c US -s California -l 'Los Angeles' -o 'Example Org' -u 
 ${SCRIPT_NAME} --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 
 
-Options:
+General Options:
 
   -h|--help            Display this help and exit
   -p|--path            Path to output generated files
@@ -54,12 +55,17 @@ Options:
   -d|--duration        Validity duration of the certificate (in days)
   -b|--bits            Key size in bits (default '2048')
 
+Certificate Authority Options:
+
   --ca-key             Path to certificate authority key file
                        (Generates new CA if not set)
   --ca-cert            Path to certificate authority cert file
                        (Generates new CA if not set)
+  --ca-only            Instructs script to generate a certificate authority, and not to generate a signed certificate
   -t|--trust           Flag to trust certificate authority
                        (Do not set for default 'false')
+
+Certificate Subject Options:
 
   -c|--country         Country Name (2 letter code)
   -s|--state           State or Province Name (full name)
@@ -91,6 +97,7 @@ _parse_vars() {
             -h|--help) help; _safe_exit;;
             --ca-key) CA_KEY="$VALUE";;
             --ca-cert) CA="$VALUE";;
+            --ca-only) CA_ONLY=1;;
             -t|--trust) TRUST=1;;
             -c|--country) C="$VALUE";;
             -s|--state) ST="$VALUE";;
@@ -266,12 +273,6 @@ _build_ca() {
 _build_cert() {
     FILE=${CN/\*\./}
 
-    # Check certificate authority
-    if [ -z "$CA" -o -z "$CA_KEY" ]; then
-        echo "Building certificate authority"
-        _build_ca
-    fi
-
     # Build 
     cat > "${OUT}${FILE}.ext" << EOF
 authorityKeyIdentifier=keyid,issuer
@@ -303,7 +304,19 @@ EOF
     rm -f "${OUT}${FILE}.ext"
 }
 
+# Process variables
 _parse_vars "$@"
 _check_vars
-_build_cert
+
+# Build certificate authority
+if [ -z "$CA" -o -z "$CA_KEY" ]; then
+    echo "Building certificate authority"
+    _build_ca
+fi
+
+# Build certificate
+if [ -z "$CA_ONLY" ]; then
+    _build_cert
+fi
+
 _safe_exit
