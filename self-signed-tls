@@ -81,19 +81,25 @@ EOF
 # Parse variables
 _parse_vars() {
     while [ -n "$1" ]; do
-        # Parse argument
-        if [ "${1:0:2}" == "--" -o "${1:2:1}" == "=" ]; then
-            PARAM=${1%%=*}
-            VALUE=${1/$PARAM=/}
+        # Parse arguments without values
+        if [[ " -h -t " =~ " $1 " ]]; then
+            ARG="${1}"
+            VALUE=""
             shift
+        # Parse arguments with "="
+        elif [ "${1:0:2}" == "--" -o "${1:2:1}" == "=" ]; then
+            ARG=${1%%=*}
+            VALUE=${1/$ARG=/}
+            shift
+        # Parse arguments separated by space
         else
-            PARAM="$1"
+            ARG="$1"
             VALUE="$2"
             shift 2
         fi
 
         # Map values
-        case $PARAM in
+        case $ARG in
             -h|--help) help; _safe_exit;;
             --ca-key) CA_KEY="$VALUE";;
             --ca-cert) CA="$VALUE";;
@@ -113,7 +119,7 @@ _parse_vars() {
             -d|--duration) DAYS="$VALUE";;
             -b|--bits) BITS="$VALUE";;
             -v|--verbose) echo "Warn: -v|--verbose option is deprecated.";;
-            *) echo "ERROR: unknown parameter \"$PARAM\""; help; _safe_exit 1 ;;
+            *) echo "ERROR: unknown parameter \"${ARG}\""; help; _safe_exit 1 ;;
         esac
     done
 }
