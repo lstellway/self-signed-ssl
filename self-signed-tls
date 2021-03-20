@@ -185,6 +185,11 @@ _check_vars() {
         read -r EMAIL
     fi
 
+    # Make sure output directory ends with a directory separator
+    if [ "${OUT: -1}" != "/" ]; then
+        OUT="${OUT}/"
+    fi
+
     # Check if output directory exists
     if [ ! -d "$OUT" ]; then
         if [ $CREATE_PATH -eq 1 ]; then
