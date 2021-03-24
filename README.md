@@ -51,7 +51,7 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 | `-o VALUE` `--organization=VALUE` | Organization Name (eg, company) |
 | `-u VALUE` `--unit=VALUE` | Organizational Unit Name (eg, section) |
 | `-n VALUE` `--common-name=VALUE` | Common Name (e.g. server FQDN or YOUR name) |
-| `-a VALUE` `--san=VALUE` | Comma-delimited list of subject alternative names |
+| `-a VALUE` `--san=VALUE` | Comma-delimited list of subject alternative names _(Subdomains, etc..)_ |
 | `-e VALUE` `--email=VALUE` | Email Address |
 
 <br />
