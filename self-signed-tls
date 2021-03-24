@@ -44,7 +44,7 @@ Usage:
 
 ${SCRIPT_NAME} [OPTIONS]
 ${SCRIPT_NAME} --trust -c US -s California -l 'Los Angeles' -o 'Example Org' -u 'Example Unit'
-${SCRIPT_NAME} --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem --ca-only
+${SCRIPT_NAME} --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 
 
 General Options:
