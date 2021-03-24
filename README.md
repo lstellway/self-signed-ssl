@@ -9,7 +9,7 @@ This is script to simplify the creation of certificate authorities and self-sign
 ```
 self-signed-tls [OPTIONS]
 self-signed-tls --trust -c US -s California -l 'Los Angeles' -o 'Example Org' -u 'Example Unit'
-self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem --ca-only
+self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 ```
 
 <br />
