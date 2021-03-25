@@ -11,8 +11,8 @@ This script simplifies the creation of certificate authorities and self-signed T
 **Homebrew (MacOS)**
 
 ```
-brew tap lstellway/formulas
-brew install lstellway/formulas/self-signed-ssl
+brew tap lstellway/formulae
+brew install lstellway/formulae/self-signed-ssl
 ```
 
 <br />
