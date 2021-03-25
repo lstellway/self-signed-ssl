@@ -11,8 +11,8 @@ This script simplifies the creation of certificate authorities and self-signed T
 **Homebrew (MacOS)**
 
 ```
-brew tap loganstellway/self-signed-ssl
-brew install loganstellway/self-signed-ssl/self-signed-ssl
+brew tap lstellway/self-signed-ssl
+brew install lstellway/self-signed-ssl/self-signed-ssl
 ```
 
 <br />
@@ -20,7 +20,7 @@ brew install loganstellway/self-signed-ssl/self-signed-ssl
 **cURL**
 
 ```
-curl --output self-signed-tls https://raw.githubusercontent.com/loganstellway/self-signed-ssl/master/self-signed-tls && chmod +x self-signed-tls
+curl --output self-signed-tls https://raw.githubusercontent.com/lstellway/self-signed-ssl/master/self-signed-tls && chmod +x self-signed-tls
 ```
 
 <br />
@@ -80,4 +80,4 @@ self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
 ## Resources
 
 -   [OpenSSL 1.1.1 Manual](https://www.openssl.org/docs/man1.1.1/man1/)
--   [Submit Issues](https://github.com/loganstellway/self-signed-ssl/issues)
+-   [Submit Issues](https://github.com/lstellway/self-signed-ssl/issues)
