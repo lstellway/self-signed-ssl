@@ -20,7 +20,7 @@ brew install loganstellway/self-signed-ssl/self-signed-ssl
 **cURL**
 
 ```
-curl --output self-signed-ssl https://raw.githubusercontent.com/loganstellway/self-signed-ssl/master/self-signed-tls && chmod +x self-signed-ssl
+curl --output self-signed-tls https://raw.githubusercontent.com/loganstellway/self-signed-ssl/master/self-signed-tls && chmod +x self-signed-tls
 ```
 
 <br />
