@@ -6,12 +6,16 @@ This is script to simplify the creation of certificate authorities and self-sign
 
 ## Installation
 
+<br />
+
 **Homebrew (MacOS)**
 
 ```
 brew tap loganstellway/self-signed-ssl
 brew install loganstellway/self-signed-ssl/self-signed-ssl
 ```
+
+<br />
 
 **cURL**
 
