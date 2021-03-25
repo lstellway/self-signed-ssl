@@ -1,6 +1,6 @@
 # Self Signed TLS
 
-This is script to simplify the creation of certificate authorities and self-signed TLS certificates using OpenSSL.
+This script simplifies the creation of certificate authorities and self-signed TLS certificates using OpenSSL.
 
 <br />
 
