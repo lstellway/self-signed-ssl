@@ -44,9 +44,14 @@ This script simplifies the creation of certificate authorities and self-signed T
 Usage:
 
 ${SCRIPT_NAME} [OPTIONS]
+# Run with no arguments to be prompted for required values
+${SCRIPT_NAME}
+# Only create a certificate authority and trust the generated certificate
 ${SCRIPT_NAME} --ca-only --trust
-${SCRIPT_NAME} --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
-${SCRIPT_NAME} -c US -s California -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
+# Generate a signed certificate using an existing certificate authority
+${SCRIPT_NAME} --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem'
+# Automate certificate generation
+${SCRIPT_NAME} --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
 
 
 General Options:

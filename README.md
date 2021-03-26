@@ -27,11 +27,16 @@ curl --output self-signed-tls https://raw.githubusercontent.com/lstellway/self-s
 
 ## Usage
 
-```
+```shell
 self-signed-tls [OPTIONS]
+# Run with no arguments to be prompted for required values
+self-signed-tls
+# Only create a certificate authority and trust the generated certificate
 self-signed-tls --ca-only --trust
-self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
-self-signed-tls -c US -s California -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
+# Generate a signed certificate using an existing certificate authority
+self-signed-tls --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem'
+# Automate certificate generation
+self-signed-tls --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
 ```
 
 <br />
