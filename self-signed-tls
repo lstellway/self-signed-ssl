@@ -44,8 +44,9 @@ This script simplifies the creation of certificate authorities and self-signed T
 Usage:
 
 ${SCRIPT_NAME} [OPTIONS]
-${SCRIPT_NAME} --trust -c US -s California -l 'Los Angeles' -o 'Example Org' -u 'Example Unit'
+${SCRIPT_NAME} --ca-only --trust
 ${SCRIPT_NAME} --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
+${SCRIPT_NAME} -c US -s California -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
 
 
 General Options:

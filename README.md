@@ -29,8 +29,9 @@ curl --output self-signed-tls https://raw.githubusercontent.com/lstellway/self-s
 
 ```
 self-signed-tls [OPTIONS]
-self-signed-tls --trust -c US -s California -l 'Los Angeles' -o 'Example Org' -u 'Example Unit'
+self-signed-tls --ca-only --trust
 self-signed-tls --ca-key=/path/to/CA.key --ca-cert=/path/to/CA.pem
+self-signed-tls -c US -s California -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
 ```
 
 <br />
