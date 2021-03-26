@@ -8,6 +8,7 @@ OUT=$(pwd)"/"
 CREATE_PATH=0
 INTERACT=1
 BITS=2048
+EXIT_CODE=0
 
 # Certificate authority defaults
 CA_KEY=""
@@ -34,10 +35,10 @@ _safe_exit() {
 }
 
 # Help Screen
-help() {
+_help() {
 cat <<EOF
 ${SCRIPT_NAME}
-This is script to simplify the creatiion of a certificate authority and self-signed TLS certificates using OpenSSL.
+This script simplifies the creation of certificate authorities and self-signed TLS certificates using OpenSSL.
 
 
 Usage:
@@ -100,7 +101,7 @@ _parse_vars() {
 
         # Map values
         case $ARG in
-            -h|--help) help; _safe_exit;;
+            -h|--help) _help; _safe_exit 0;;
             --ca-key) CA_KEY="$VALUE";;
             --ca-cert) CA="$VALUE";;
             --ca-only) CA_ONLY=1;;
@@ -118,8 +119,8 @@ _parse_vars() {
             --path-create) CREATE_PATH=1;;
             -d|--duration) DAYS="$VALUE";;
             -b|--bits) BITS="$VALUE";;
-            -v|--verbose) echo "Warn: -v|--verbose option is deprecated.";;
-            *) echo "ERROR: unknown parameter \"${ARG}\""; help; _safe_exit 1 ;;
+            -v|--verbose) printf "Warn: -v|--verbose option is deprecated.\n";;
+            *) printf "ERROR: unknown parameter '${ARG}'\n"; _help; _safe_exit 1;;
         esac
     done
 }
@@ -129,12 +130,12 @@ _check_vars() {
     # Certificate authority files
     if [ -n "$CA_KEY" -a -n "$CA" ]; then
         if [ ! -f "$CA_KEY" ]; then
-            echo "The specified certificate authorify key file does not exist"
+            printf "The specified certificate authorify key file does not exist\n"
             _safe_exit 1
         fi
 
         if [ ! -f "$CA" ]; then
-            echo "The specified certificate authorify file does not exist"
+            printf "The specified certificate authorify file does not exist\n"
             _safe_exit 1
         fi
     fi
@@ -207,10 +208,10 @@ _check_vars() {
     if [ ! -d "$OUT" ]; then
         if [ $CREATE_PATH -eq 1 ]; then
             # Create path
-            mkdir -p "$OUT" || echo "Could not create directory \"${OUT}\"" && _safe_exit 1
+            mkdir -p "$OUT" || printf "Could not create directory '${OUT}'\n" && _safe_exit 1
         else
             # Report non-existent path
-            echo "The specified directory \"${OUT}\" does not exist"
+            printf "The specified directory '${OUT}' does not exist\n"
             _safe_exit 1
         fi
     fi
@@ -248,13 +249,21 @@ _add_trusted_cert() {
     case "${OSTYPE:-undefined}" in
         # MacOS
         darwin*) sudo security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" "$CA";;
+        # TODO: Implement certificate trusting for other systems
         # linux*) ;;
-        *) echo "Unsupported OSTYPE '${OSTYPE:-undefined}'";;
+        *) printf "Error: Unsupported OSTYPE '${OSTYPE:-undefined}'\n"; EXIT_CODE=1;;
     esac
 }
 
 # Build certificate authority
 _build_ca() {
+    # Only proceed if CA args are not provided
+    if [ -n "$CA" -a -n "$CA_KEY" ]; then
+        return
+    fi
+
+    printf "Building certificate authority\n"
+
     CA_KEY="${OUT}CA.key"
     CA="${OUT}CA.pem"
 
@@ -277,6 +286,11 @@ _build_ca() {
 
 # Sign certificate
 _build_cert() {
+    # Do not proceed if only building CA
+    if [ -n "$CA_ONLY" ]; then
+        return
+    fi
+
     FILE=${CN/\*\./}
 
     # Build 
@@ -310,19 +324,11 @@ EOF
     rm -f "${OUT}${FILE}.ext"
 }
 
-# Process variables
+# Order of execution
 _parse_vars "$@"
 _check_vars
+_build_ca
+_build_cert
 
-# Build certificate authority
-if [ -z "$CA" -o -z "$CA_KEY" ]; then
-    echo "Building certificate authority"
-    _build_ca
-fi
-
-# Build certificate
-if [ -z "$CA_ONLY" ]; then
-    _build_cert
-fi
-
-_safe_exit
+# Report success
+_safe_exit $EXIT_CODE
