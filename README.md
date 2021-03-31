@@ -81,6 +81,8 @@ self-signed-tls --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Ex
 | ----------- | ----------------------------------------------------------------- |
 | `--csr-only` | Instructs script to solely generate a certificate signing request |
 
+<br />
+
 **Certificate / Subject**
 
 | Option                            | Description                                                                                          |
