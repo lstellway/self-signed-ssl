@@ -90,4 +90,4 @@ self-signed-tls --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Ex
 ## Resources
 
 -   [OpenSSL 1.1.1 Manual](https://www.openssl.org/docs/man1.1.1/man1/)
--   [Submit Issues](https://github.com/lstellway/self-signed-ssl/issues)
+-   [Issues / Feature Requests](https://github.com/lstellway/self-signed-ssl/issues)
