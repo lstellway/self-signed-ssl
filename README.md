@@ -83,16 +83,17 @@ self-signed-tls --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Ex
 
 **Certificate Subject**
 
-| Option                            | Description                                                             |
-| --------------------------------- | ----------------------------------------------------------------------- |
-| `-c VALUE` `--country=VALUE`      | Country Name (2 letter code)                                            |
-| `-s VALUE` `--state=VALUE`        | State or Province Name (full name)                                      |
-| `-l VALUE` `--locality=VALUE`     | Locality Name (eg, city)                                                |
-| `-o VALUE` `--organization=VALUE` | Organization Name (eg, company)                                         |
-| `-u VALUE` `--unit=VALUE`         | Organizational Unit Name (eg, section)                                  |
-| `-n VALUE` `--common-name=VALUE`  | Common Name (e.g. server FQDN or YOUR name)                             |
-| `-a VALUE` `--san=VALUE`          | Comma-delimited list of subject alternative names _(Subdomains, etc..)_ |
-| `-e VALUE` `--email=VALUE`        | Email Address                                                           |
+| Option                            | Description                                                                                          |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `--extfile=VALUE`                 | Path to file containing OpenSSL certificate extensions<br />_(Optional - generated if not provided)_ |
+| `-c VALUE` `--country=VALUE`      | Country Name (2 letter code)                                                                         |
+| `-s VALUE` `--state=VALUE`        | State or Province Name (full name)                                                                   |
+| `-l VALUE` `--locality=VALUE`     | Locality Name (eg, city)                                                                             |
+| `-o VALUE` `--organization=VALUE` | Organization Name (eg, company)                                                                      |
+| `-u VALUE` `--unit=VALUE`         | Organizational Unit Name (eg, section)                                                               |
+| `-n VALUE` `--common-name=VALUE`  | Common Name (e.g. server FQDN or YOUR name)                                                          |
+| `-a VALUE` `--san=VALUE`          | Comma-delimited list of subject alternative names _(Subdomains, etc..)_                              |
+| `-e VALUE` `--email=VALUE`        | Email Address                                                                                        |
 
 <br />
 

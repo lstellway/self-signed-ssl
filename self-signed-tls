@@ -19,6 +19,7 @@ SUBJ=""
 
 # Signed certificate defaults
 CSR_ONLY=""
+EXTFILE=""
 DAYS=365 # 1 year
 C=""
 S=""
@@ -79,8 +80,10 @@ Certificate Signing Request Options:
 
   --csr-only           Instructs script to solely generate a certificate signing request
 
-Certificate Subject Options:
+Certificate Options:
 
+  --extfile            Path to file containing OpenSSL certificate extensions
+                       (Optional - generated if not provided)
   -c|--country         Country Name (2 letter code)
   -s|--state           State or Province Name (full name)
   -l|--locality        Locality Name (eg, city)
@@ -115,11 +118,21 @@ _parse_vars() {
         # Map values
         case $ARG in
             -h|--help) _help; _safe_exit 0;;
+            -p|--path) OUT="$VALUE";;
+            --path-create) CREATE_PATH=1;;
+            -d|--duration) DAYS="$VALUE";;
+            -b|--bits) BITS="$VALUE";;
+            --no-interaction) INTERACT=0;;
+            -v|--verbose) printf "Warn: -v|--verbose option is deprecated.\n";;
+            # CA
             --ca-key) CA_KEY="$VALUE";;
             --ca-cert) CA="$VALUE";;
             --ca-only) CA_ONLY=1;;
-            --csr-only) CSR_ONLY=1;;
             -t|--trust) TRUST=1;;
+            # CSR
+            --csr-only) CSR_ONLY=1;;
+            # Cert
+            --extfile) EXTFILE="$VALUE";;
             -c|--country) C="$VALUE";;
             -s|--state) ST="$VALUE";;
             -l|--locality) L="$VALUE";;
@@ -128,12 +141,6 @@ _parse_vars() {
             -n|--common-name) CN="$VALUE"; HAS_CN=true;;
             -a|--san) SAN="$VALUE";;
             -e|--email) EMAIL="$VALUE";;
-            --no-interaction) INTERACT=0;;
-            -p|--path) OUT="$VALUE";;
-            --path-create) CREATE_PATH=1;;
-            -d|--duration) DAYS="$VALUE";;
-            -b|--bits) BITS="$VALUE";;
-            -v|--verbose) printf "Warn: -v|--verbose option is deprecated.\n";;
             *) printf "ERROR: unknown parameter '${ARG}'\n"; _help; _safe_exit 1;;
         esac
     done
@@ -324,8 +331,12 @@ _build_cert() {
         return
     fi
 
-    # Build 
-    cat > "${OUT}${FILE}.ext" << EOF
+    # Build extensions file if not provided
+    EXT="$EXTFILE"
+    if [ ! -f "$EXTFILE" ]; then
+        EXT="${OUT}${FILE}.ext"
+
+        cat > "$EXT" << EOF
 authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
 keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
@@ -334,17 +345,21 @@ subjectAltName = @alt_names
 [alt_names]
 ${SAN}
 EOF
+    fi
 
     # Create a signed certificate
     openssl x509 -req -sha256 -CAcreateserial \
         -CA "$CA" \
         -CAkey "$CA_KEY" \
         -days "$DAYS" \
-        -extfile "${OUT}${FILE}.ext" \
+        -extfile "$EXT" \
         -in "${OUT}${FILE}.csr" \
         -out "${OUT}${FILE}.crt"
 
-    rm -f "${OUT}${FILE}.ext"
+    # Cleanup generated extensions file
+    if [ ! -f "$EXTFILE" ]; then
+        rm -f "$EXT"
+    fi
 }
 
 # Order of execution
