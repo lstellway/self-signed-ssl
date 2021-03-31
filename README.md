@@ -36,6 +36,9 @@ self-signed-tls
 # Only create a certificate authority and trust the generated certificate
 self-signed-tls --ca-only --trust
 
+# Only create a certificate signing request
+self-signed-tls --csr-only
+
 # Generate a signed certificate using an existing certificate authority
 self-signed-tls --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem'
 
@@ -67,10 +70,16 @@ self-signed-tls --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Ex
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--ca-key=VALUE`  | Path to certificate authority key file <br/>_(Generates new CA if not set)_                                                                                                                                                                                   |
 | `--ca-cert=VALUE` | Path to certificate authority cert file <br />_(Generates new CA if not set)_                                                                                                                                                                                 |
-| `--ca-only`       | Instructs script to generate a certificate authority, and not to generate a signed certificate                                                                                                                                                                |
+| `--ca-only`       | Instructs script to solely generate a certificate authority                                                                                                                                                                                                   |
 | `-t` `--trust`    | Flag to trust certificate authority _(requires `sudo` privileges)_<br />_(Do not set for default 'false')_<br /><br />_Currently only supports Darwin / MacOS. <br />Please feel free to contribute if you know how to trust a certificate on other systems._ |
 
 <br />
+
+**Certificate Signing Request**
+
+| Option      | Description                                                       |
+| ----------- | ----------------------------------------------------------------- |
+| `--ca-only` | Instructs script to solely generate a certificate signing request |
 
 **Certificate Subject**
 

@@ -18,6 +18,7 @@ TRUST=""
 SUBJ=""
 
 # Signed certificate defaults
+CSR_ONLY=""
 DAYS=365 # 1 year
 C=""
 S=""
@@ -48,6 +49,8 @@ ${SCRIPT_NAME} [OPTIONS]
 ${SCRIPT_NAME}
 # Only create a certificate authority and trust the generated certificate
 ${SCRIPT_NAME} --ca-only --trust
+# Only create a certificate signing request
+${SCRIPT_NAME} --csr-only
 # Generate a signed certificate using an existing certificate authority
 ${SCRIPT_NAME} --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem'
 # Automate certificate generation
@@ -68,9 +71,13 @@ Certificate Authority Options:
                        (Generates new CA if not set)
   --ca-cert            Path to certificate authority cert file
                        (Generates new CA if not set)
-  --ca-only            Instructs script to generate a certificate authority, and not to generate a signed certificate
+  --ca-only            Instructs script to solely generate a certificate authority
   -t|--trust           Flag to trust certificate authority
                        (Do not set for default 'false')
+
+Certificate Signing Request Options:
+
+  --csr-only           Instructs script to solely generate a certificate signing request
 
 Certificate Subject Options:
 
@@ -111,6 +118,7 @@ _parse_vars() {
             --ca-key) CA_KEY="$VALUE";;
             --ca-cert) CA="$VALUE";;
             --ca-only) CA_ONLY=1;;
+            --csr-only) CSR_ONLY=1;;
             -t|--trust) TRUST=1;;
             -c|--country) C="$VALUE";;
             -s|--state) ST="$VALUE";;
@@ -181,6 +189,9 @@ _check_vars() {
         printf "Common Name (e.g. server FQDN or YOUR name) []: "
         read -r CN
     fi
+
+    # File name used for generating files
+    FILE="${CN/\*\./}"
 
     # Subject Alternative Names
     if [ -z "$SAN" -a -z "$HAS_CN" -a $INTERACT -eq 1 ]; then
@@ -263,8 +274,8 @@ _add_trusted_cert() {
 
 # Build certificate authority
 _build_ca() {
-    # Only proceed if CA args are not provided
-    if [ -n "$CA" -a -n "$CA_KEY" ]; then
+    # Return early if CA args are provided or only generating CSR
+    if [ -n "$CA" -a -n "$CA_KEY" -o -n "$CSR_ONLY" ]; then
         return
     fi
 
@@ -290,14 +301,28 @@ _build_ca() {
     _add_trusted_cert
 }
 
-# Sign certificate
-_build_cert() {
-    # Do not proceed if only building CA
+# Build certificate signing request
+_build_csr() {
+    # Return early if only building CA
     if [ -n "$CA_ONLY" ]; then
         return
     fi
 
-    FILE=${CN/\*\./}
+    # Generate key and certificate signing request
+    openssl genrsa -out "${OUT}${FILE}.key" "$BITS"
+    openssl req -new -nodes -sha256 \
+        -subj "$SUBJ" \
+        -newkey "rsa:${BITS}" \
+        -key "${OUT}${FILE}.key" \
+        -out "${OUT}${FILE}.csr"
+}
+
+# Sign certificate
+_build_cert() {
+    # Return early if only building CA or CSR
+    if [ -n "$CA_ONLY" -o -n "$CSR_ONLY" ]; then
+        return
+    fi
 
     # Build 
     cat > "${OUT}${FILE}.ext" << EOF
@@ -309,14 +334,6 @@ subjectAltName = @alt_names
 [alt_names]
 ${SAN}
 EOF
-
-    # Generate key and certificate signing request
-    openssl genrsa -out "${OUT}${FILE}.key" "$BITS"
-    openssl req -new -nodes -sha256 \
-        -subj "$SUBJ" \
-        -newkey "rsa:${BITS}" \
-        -key "${OUT}${FILE}.key" \
-        -out "${OUT}${FILE}.csr"
 
     # Create a signed certificate
     openssl x509 -req -sha256 -CAcreateserial \
@@ -334,6 +351,7 @@ EOF
 _parse_vars "$@"
 _check_vars
 _build_ca
+_build_csr
 _build_cert
 
 # Report success
