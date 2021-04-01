@@ -66,19 +66,19 @@ self-signed-tls --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Ex
 
 **Certificate Authority**
 
-| Option            | Description                                                                                                                                                                                                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--ca-key=VALUE`  | Path to certificate authority key file <br/>_(Generates new CA if not set)_                                                                                                                                                                                   |
-| `--ca-cert=VALUE` | Path to certificate authority cert file <br />_(Generates new CA if not set)_                                                                                                                                                                                 |
-| `--ca-only`       | Instructs script to solely generate a certificate authority                                                                                                                                                                                                   |
-| `-t` `--trust`    | Flag to trust certificate authority _(requires `sudo` privileges)_<br />_(Do not set for default 'false')_<br /><br />_Currently only supports Darwin / MacOS. <br />Please feel free to contribute if you know how to trust a certificate on other systems._ |
+| Option            | Description                                                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `--ca-key=VALUE`  | Path to certificate authority key file <br/>_(Generates new CA if not set)_                                                               |
+| `--ca-cert=VALUE` | Path to certificate authority cert file <br />_(Generates new CA if not set)_                                                             |
+| `--ca-only`       | Instructs script to solely generate a certificate authority                                                                               |
+| `-t` `--trust`    | Flag to trust certificate authority _(requires `sudo` privileges)_<br />_(Currently supports Darwin/MacOS, Fedora/CentOS, Debian/Ubuntu)_ |
 
 <br />
 
 **Certificate Signing Request**
 
-| Option      | Description                                                       |
-| ----------- | ----------------------------------------------------------------- |
+| Option       | Description                                                       |
+| ------------ | ----------------------------------------------------------------- |
 | `--csr-only` | Instructs script to solely generate a certificate signing request |
 
 <br />
