@@ -52,6 +52,39 @@ _safe_exit() {
 }
 
 #######################################
+# Check if packages are installed
+# Arguments:
+#   List of commands (strings) to verify
+# Outputs:
+#   Writes message to stderr and returns error code if package not present
+#######################################
+_require() {
+  while [ -n "$1" ]; do
+    if [ -z "$(command -v "$1")" ]; then
+      printf "Command '%s' not found\n" "${1}"
+      printf "Please ensure the program is installed and referenced in PATH variable\n" >&2
+      return 1
+    fi
+    shift
+  done
+}
+
+#######################################
+# Validate script requirements
+# Arguments:
+#   None
+# Outputs:
+#   Exits script if required package not found
+#######################################
+_check_requirements() {
+  # Require OpenSSL
+  _require "openssl" || _safe_exit 1
+
+  # Require sudo if trusting CA
+  [ -z "${TRUST}" ] || _require "sudo" || _safe_exit 1
+}
+
+#######################################
 # Display the help Screen
 # Arguments:
 #   None
@@ -339,6 +372,26 @@ _validate_args() {
 }
 
 #######################################
+# Trust certificate authority on Linux system
+# Arguments:
+#   Command (string)
+#   Directory (string)
+#######################################
+_trust_linux() {
+  # If command and directory exist
+  if [ -n "$(command -v "$1")" ] && [ -d "$(dirname "$2")" ]; then
+    printf "Installing certificate authority (requires sudo privileges)\n"
+
+    # Add certificate if it doesn't exist & trust it
+    [ -f "$2" ] || sudo cp "${CA}" "$2" \
+      && sudo "$1" \
+      && return
+  fi
+
+  return 1
+}
+
+#######################################
 # Trust certificate authority
 # Globals:
 #   OSTYPE
@@ -348,22 +401,23 @@ _validate_args() {
 _trust_ca() {
   # Check if CA exists and script is instructed to trust
   if [ -f "${CA_KEY}" ] && [ -f "${CA}" ] && [ -n "${TRUST}" ]; then
-    case "${OSTYPE:-undefined}" in
-      # MacOS
-      darwin*)
-        sudo security add-trusted-cert \
-          -d \
-          -r trustRoot \
-          -k "/Library/Keychains/System.keychain" \
-          "${CA}"
-        ;;
-      # TODO: Implement certificate trusting for other systems
-      # linux*) ;;
-      *)
-        printf "Error: Unsupported OSTYPE '%s'\n" "${OSTYPE:-undefined}"
-        EXIT_CODE=1
-        ;;
-    esac
+    if [[ "${OSTYPE}" == "darwin"* ]]; then
+      # MacOS (Darwin)
+      sudo security add-trusted-cert -d -r trustRoot \
+        -k "/Library/Keychains/System.keychain" \
+        "${CA}" \
+        && return
+    elif [[ "${OSTYPE}" == "linux"* ]]; then
+      # Linux (Fedora/CentOS, Debian/Ubuntu)
+      _trust_linux "update-ca-trust" "/etc/pki/ca-trust/source/anchors/${FILE}-ca.pem" \
+        || _trust_linux "update-ca-certificates" "/usr/local/share/ca-certificates/${FILE}-ca.crt" \
+        && return
+    fi
+
+    # Unsupported OS
+    printf "Error occurred while trusting certificate for OSTYPE '%s'\n" "${OSTYPE:-undefined}" >&2
+    printf "Please ensure you are on a supported system and have the required packages installed.\n" >&2
+    EXIT_CODE=1
   fi
 }
 
@@ -463,6 +517,7 @@ EOF
 # Order of execution
 #######################################
 _parse_args "$@"
+_check_requirements
 _validate_args
 _build_ca
 _trust_ca
