@@ -400,7 +400,7 @@ _trust_linux() {
 #######################################
 _trust_ca() {
   # Check if CA exists and script is instructed to trust
-  if [ -f "${CA_KEY}" ] && [ -f "${CA}" ] && [ -n "${TRUST}" ]; then
+  if [ -f "${CA}" ] && [ -n "${TRUST}" ]; then
     if [[ "${OSTYPE}" == "darwin"* ]]; then
       # MacOS (Darwin)
       sudo security add-trusted-cert -d -r trustRoot \
