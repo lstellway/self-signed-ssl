@@ -2,10 +2,13 @@
 #
 # This script simplifies the creation of certificate authorities and 
 # self-signed TLS certificates using OpenSSL
+# Execute with help flag (-h|--help) for documentation. 
 
 set -e
 
+#######################################
 # General defaults
+#######################################
 SCRIPT_NAME="$(basename "$0")"
 OUT="$(pwd)/"
 CREATE_PATH=0
@@ -13,18 +16,30 @@ INTERACT=1
 BITS=2048
 EXIT_CODE=0
 
+#######################################
 # Certificate authority defaults
+#######################################
 CA_KEY=""
 CA=""
 CA_ONLY=""
 TRUST=""
 SUBJ=""
 
-# Signed certificate defaults
+#######################################
+# Certificate / subject defaults
+#######################################
 CSR_ONLY=""
 EXTFILE=""
 DAYS=365 # 1 year
-C=""; ST=""; L=""; O=""; OU=""; CN=""; HAS_CN=""; SAN=""; EMAIL="";
+C=""
+ST=""
+L=""
+O=""
+OU=""
+CN=""
+HAS_CN=""
+SAN=""
+EMAIL=""
 
 #######################################
 # Safely exit the script
@@ -38,8 +53,6 @@ _safe_exit() {
 
 #######################################
 # Display the help Screen
-# Globals:
-#   SCRIPT_NAME
 # Arguments:
 #   None
 # Outputs:
@@ -113,9 +126,10 @@ EOF
 
 #######################################
 # Parse input arguments
-#
 # Arguments:
 #   All script arguments
+# Output:
+#   Exits and outputs error to stderr when invalid argument provided
 #######################################
 _parse_args() {
   while [ -n "$1" ]; do
@@ -144,7 +158,6 @@ _parse_args() {
       -d|--duration) DAYS="${VALUE}";;
       -b|--bits) BITS="${VALUE}";;
       --no-interaction) INTERACT=0;;
-      -v|--verbose) printf "Warn: -v|--verbose option is deprecated.\n";;
       # CA
       --ca-key) CA_KEY="${VALUE}";;
       --ca-cert) CA="${VALUE}";;
@@ -164,7 +177,7 @@ _parse_args() {
       -e|--email) EMAIL="${VALUE}";;
       # Invalid arguments
       *)
-        printf "ERROR: unknown parameter '%s'\n" "${ARG}"
+        printf "Error: unknown parameter '%s'\n" "${ARG}" >&2
         _help
         _safe_exit 1
         ;;
@@ -234,12 +247,12 @@ _validate_args() {
   # Certificate authority files
   if [ -n "${CA_KEY}" ] && [ -n "${CA}" ]; then
     if [ ! -f "${CA_KEY}" ]; then
-      printf "The specified certificate authorify key file does not exist\n"
+      printf "The specified certificate authorify key file does not exist\n" >&2
       _safe_exit 1
     fi
 
     if [ ! -f "${CA}" ]; then
-      printf "The specified certificate authorify file does not exist\n"
+      printf "The specified certificate authorify file does not exist\n" >&2
       _safe_exit 1
     fi
   fi
@@ -306,11 +319,11 @@ _validate_args() {
     if [ $CREATE_PATH -eq 1 ]; then
       # Create path
       mkdir -p "${OUT}" \
-        || printf "Could not create directory '%s'\n" "${OUT}" \
+        || printf "Could not create directory '%s'\n" "${OUT}" >&2 \
         && _safe_exit 1
     else
       # Report non-existent path
-      printf "The specified directory '%s' does not exist\n" "${OUT}"
+      printf "The specified directory '%s' does not exist\n" "${OUT}" >&2
       _safe_exit 1
     fi
   fi
@@ -320,7 +333,7 @@ _validate_args() {
 
   # Validate extfile if provided
   if [ -n "${EXTFILE}" ] && [ ! -f "${EXTFILE}" ]; then
-    printf "The specified extfile '%s' does not exist\n" "${EXTFILE}"
+    printf "The specified extfile '%s' does not exist\n" "${EXTFILE}" >&2
     _safe_exit 1
   fi
 }
