@@ -1,10 +1,13 @@
 #!/bin/bash
+#
+# This script simplifies the creation of certificate authorities and 
+# self-signed TLS certificates using OpenSSL
 
 set -e
 
 # General defaults
-SCRIPT_NAME="$(basename ${0})"
-OUT=$(pwd)"/"
+SCRIPT_NAME="$(basename "$0")"
+OUT="$(pwd)/"
 CREATE_PATH=0
 INTERACT=1
 BITS=2048
@@ -21,322 +24,403 @@ SUBJ=""
 CSR_ONLY=""
 EXTFILE=""
 DAYS=365 # 1 year
-C=""
-S=""
-L=""
-O=""
-OU=""
-CN=""
-SAN=""
-EMAIL=""
+C=""; ST=""; L=""; O=""; OU=""; CN=""; HAS_CN=""; SAN=""; EMAIL="";
 
-# Safe exit
+#######################################
+# Safely exit the script
+# Arguments:
+#   Exit code (number)
+#######################################
 _safe_exit() {
-    trap - INT TERM EXIT
-    exit $@
+  trap - INT TERM EXIT
+  exit "$@"
 }
 
-# Help Screen
+#######################################
+# Display the help Screen
+# Globals:
+#   SCRIPT_NAME
+# Arguments:
+#   None
+# Outputs:
+#   Writes help to stdout
+#######################################
 _help() {
-cat <<EOF
-${SCRIPT_NAME}
-This script simplifies the creation of certificate authorities and self-signed TLS certificates using OpenSSL.
+  cat <<EOF
+
+  ${SCRIPT_NAME}
+
+  This script simplifies the creation of certificate authorities and self-signed TLS certificates using OpenSSL.
 
 
-Usage:
+  Usage:
 
-${SCRIPT_NAME} [OPTIONS]
-# Run with no arguments to be prompted for required values
-${SCRIPT_NAME}
-# Only create a certificate authority and trust the generated certificate
-${SCRIPT_NAME} --ca-only --trust
-# Only create a certificate signing request
-${SCRIPT_NAME} --csr-only
-# Generate a signed certificate using an existing certificate authority
-${SCRIPT_NAME} --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem'
-# Automate certificate generation
-${SCRIPT_NAME} --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
+    ${SCRIPT_NAME} [OPTIONS]
+
+    # Run with no arguments to be prompted for required values
+    ${SCRIPT_NAME}
+
+    # Only create a certificate authority and trust the generated certificate
+    ${SCRIPT_NAME} --ca-only --trust
+
+    # Only create a certificate signing request
+    ${SCRIPT_NAME} --csr-only
+
+    # Generate a signed certificate using an existing certificate authority
+    ${SCRIPT_NAME} --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem'
+
+    # Automate certificate generation
+    ${SCRIPT_NAME} --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
 
 
-General Options:
+  General Options:
 
-  -h|--help            Display this help and exit
-  -p|--path            Path to output generated files
-  --no-interaction     Disables interactive prompts for answers
-  -d|--duration        Validity duration of the certificate (in days)
-  -b|--bits            Key size in bits (default '2048')
+    -h|--help            Display this help and exit
+    -p|--path            Path to output generated files
+    -d|--duration        Validity duration of the certificate (in days)
+    -b|--bits            Key size in bits (default '2048')
+    --no-interaction     Disables interactive prompts for answers
 
-Certificate Authority Options:
+  Certificate Authority Options:
 
-  --ca-key             Path to certificate authority key file
-                       (Generates new CA if not set)
-  --ca-cert            Path to certificate authority cert file
-                       (Generates new CA if not set)
-  --ca-only            Instructs script to solely generate a certificate authority
-  -t|--trust           Flag to trust certificate authority
-                       (Do not set for default 'false')
+    --ca-only            Instructs script to solely generate a certificate authority
+    --ca-cert            Path to certificate authority cert file
+                         (Generates new CA if not set)
+    --ca-key             Path to certificate authority key file
+                         (Generates new CA if not set)
+    -t|--trust           Flag to trust certificate authority
+                         (Do not set for default 'false')
 
-Certificate Signing Request Options:
+  Certificate Signing Request Options:
 
-  --csr-only           Instructs script to solely generate a certificate signing request
+    --csr-only           Instructs script to solely generate a certificate signing request
 
-Certificate Options:
+  Certificate Options:
 
-  --extfile            Path to file containing OpenSSL certificate extensions
-                       (Optional - generated if not provided)
-  -c|--country         Country Name (2 letter code)
-  -s|--state           State or Province Name (full name)
-  -l|--locality        Locality Name (eg, city)
-  -o|--organization    Organization Name (eg, company)
-  -u|--unit            Organizational Unit Name (eg, section)
-  -n|--common-name     Common Name (e.g. server FQDN or YOUR name)
-  -a|--san             Comma-delimited list of subject alternative names
-  -e|--email           Email Address
+    --extfile            Path to file containing OpenSSL certificate extensions
+                         (Optional - generated if not provided)
+    -c|--country         Country Name (2 letter code)
+    -s|--state           State or Province Name (full name)
+    -l|--locality        Locality Name (eg, city)
+    -o|--organization    Organization Name (eg, company)
+    -u|--unit            Organizational Unit Name (eg, section)
+    -n|--common-name     Common Name (e.g. server FQDN or YOUR name)
+    -a|--san             Comma-delimited list of subject alternative names
+    -e|--email           Email Address
+
 EOF
 }
 
-# Parse variables
-_parse_vars() {
-    while [ -n "$1" ]; do
-        # Parse arguments without values
-        if [[ " -h -t " =~ " $1 " ]]; then
-            ARG="${1}"
-            VALUE=""
-            shift
-        # Parse arguments with "="
-        elif [ "${1:0:2}" == "--" -o "${1:2:1}" == "=" ]; then
-            ARG=${1%%=*}
-            VALUE=${1/$ARG=/}
-            shift
-        # Parse arguments separated by space
-        else
-            ARG="$1"
-            VALUE="$2"
-            shift 2
-        fi
-
-        # Map values
-        case $ARG in
-            -h|--help) _help; _safe_exit 0;;
-            -p|--path) OUT="$VALUE";;
-            --path-create) CREATE_PATH=1;;
-            -d|--duration) DAYS="$VALUE";;
-            -b|--bits) BITS="$VALUE";;
-            --no-interaction) INTERACT=0;;
-            -v|--verbose) printf "Warn: -v|--verbose option is deprecated.\n";;
-            # CA
-            --ca-key) CA_KEY="$VALUE";;
-            --ca-cert) CA="$VALUE";;
-            --ca-only) CA_ONLY=1;;
-            -t|--trust) TRUST=1;;
-            # CSR
-            --csr-only) CSR_ONLY=1;;
-            # Cert
-            --extfile) EXTFILE="$VALUE";;
-            -c|--country) C="$VALUE";;
-            -s|--state) ST="$VALUE";;
-            -l|--locality) L="$VALUE";;
-            -o|--organization) O="$VALUE";;
-            -u|--unit) OU="$VALUE";;
-            -n|--common-name) CN="$VALUE"; HAS_CN=true;;
-            -a|--san) SAN="$VALUE";;
-            -e|--email) EMAIL="$VALUE";;
-            *) printf "ERROR: unknown parameter '${ARG}'\n"; _help; _safe_exit 1;;
-        esac
-    done
-}
-
-# Prompt for required variables that were not provided
-_check_vars() {
-    # Certificate authority files
-    if [ -n "$CA_KEY" -a -n "$CA" ]; then
-        if [ ! -f "$CA_KEY" ]; then
-            printf "The specified certificate authorify key file does not exist\n"
-            _safe_exit 1
-        fi
-
-        if [ ! -f "$CA" ]; then
-            printf "The specified certificate authorify file does not exist\n"
-            _safe_exit 1
-        fi
+#######################################
+# Parse input arguments
+#
+# Arguments:
+#   All script arguments
+#######################################
+_parse_args() {
+  while [ -n "$1" ]; do
+    if [[ " -h -t " =~ " $1 " ]]; then
+      # Parse arguments without values
+      ARG="${1}"
+      VALUE=""
+      shift
+    elif [ "${1:0:2}" == "--" ] || [ "${1:2:1}" == "=" ]; then
+      # Parse arguments with "="
+      ARG=${1%%=*}
+      VALUE=${1/$ARG=/}
+      shift
+    else
+      # Parse arguments separated by space
+      ARG="$1"
+      VALUE="$2"
+      shift 2
     fi
 
+    case $ARG in
+      # General
+      -h|--help) _help; _safe_exit 0;;
+      -p|--path) OUT="${VALUE}";;
+      --path-create) CREATE_PATH=1;;
+      -d|--duration) DAYS="${VALUE}";;
+      -b|--bits) BITS="${VALUE}";;
+      --no-interaction) INTERACT=0;;
+      -v|--verbose) printf "Warn: -v|--verbose option is deprecated.\n";;
+      # CA
+      --ca-key) CA_KEY="${VALUE}";;
+      --ca-cert) CA="${VALUE}";;
+      --ca-only) CA_ONLY=1;;
+      -t|--trust) TRUST=1;;
+      # CSR
+      --csr-only) CSR_ONLY=1;;
+      # Cert
+      --extfile) EXTFILE="${VALUE}";;
+      -c|--country) C="${VALUE}";;
+      -s|--state) ST="${VALUE}";;
+      -l|--locality) L="${VALUE}";;
+      -o|--organization) O="${VALUE}";;
+      -u|--unit) OU="${VALUE}";;
+      -n|--common-name) CN="${VALUE}"; HAS_CN=1;;
+      -a|--san) SAN="${VALUE}";;
+      -e|--email) EMAIL="${VALUE}";;
+      # Invalid arguments
+      *)
+        printf "ERROR: unknown parameter '%s'\n" "${ARG}"
+        _help
+        _safe_exit 1
+        ;;
+    esac
+  done
+}
+
+#######################################
+# Build subject alternative names variable
+# Arguments:
+#   None
+#######################################
+_build_san() {
+  # Subject Alternative Names
+  if [ -z "${SAN}" ] && [ -z "${HAS_CN}" ] && [ $INTERACT -eq 1 ]; then
+    printf "Subject Alternative Name(s) (e.g. subdomains) []: "
+    read -r SAN
+  fi
+
+  # Build DNS
+  i=0
+  read -r -a URLS <<< "${CN} ${SAN//,/ }"
+  SAN=""
+  for u in "${URLS[@]}"; do
+    if [ -n "${u}" ]; then
+      i=$((i+1))
+      SAN="${SAN}DNS.${i} = ${u// /}"$'\n'
+    fi
+  done
+}
+
+#######################################
+# Build certificate subject
+# Arguments:
+#   None
+#######################################
+_build_subj() {
+  if [ -n "${C}" ]; then
+    SUBJ="${SUBJ}/C=${C}"
+  fi
+  if [ -n "${ST}" ]; then
+    SUBJ="${SUBJ}/ST=${ST}"
+  fi
+  if [ -n "${L}" ]; then
+    SUBJ="${SUBJ}/L=${L}"
+  fi
+  if [ -n "${O}" ]; then
+    SUBJ="${SUBJ}/O=${O}"
+  fi
+  if [ -n "${OU}" ]; then
+    SUBJ="${SUBJ}/OU=${OU}"
+  fi
+  if [ -n "${CN}" ]; then
+    SUBJ="${SUBJ}/CN=${CN}"
+  fi
+  if [ -n "${EMAIL}" ]; then
+    SUBJ="${SUBJ}/emailAddress=${EMAIL}"
+  fi
+}
+
+#######################################
+# Check that required arguments were provided and update globals
+# Arguments:
+#   None
+#######################################
+_validate_args() {
+  # Certificate authority files
+  if [ -n "${CA_KEY}" ] && [ -n "${CA}" ]; then
+    if [ ! -f "${CA_KEY}" ]; then
+      printf "The specified certificate authorify key file does not exist\n"
+      _safe_exit 1
+    fi
+
+    if [ ! -f "${CA}" ]; then
+      printf "The specified certificate authorify file does not exist\n"
+      _safe_exit 1
+    fi
+  fi
+
+  # Interactive-only arguments
+  if [ $INTERACT -eq 1 ]; then
     # Country
-    if [ -z "$C" -a $INTERACT -eq 1 ]; then
-        printf "Country Name (2 letter code) [AU]: "
-        read -r C
+    if [ -z "${C}" ]; then
+      printf "Country Name (2 letter code) [AU]: "
+      read -r C
     fi
 
     # State
-    if [ -z "$ST" -a $INTERACT -eq 1 ]; then
-        printf "State or Province Name (full name) [Some-State]: "
-        read -r ST
+    if [ -z "${ST}" ]; then
+      printf "State or Province Name (full name) [Some-State]: "
+      read -r ST
     fi
 
     # Locality
-    if [ -z "$L" -a $INTERACT -eq 1 ]; then
-        printf "Locality Name (eg, city) []: "
-        read -r L
+    if [ -z "${L}" ]; then
+      printf "Locality Name (eg, city) []: "
+      read -r L
     fi
 
     # Organization
-    if [ -z "$O" -a $INTERACT -eq 1 ]; then
-        printf "Organization Name (eg, company) [Internet Widgits Pty Ltd]: "
-        read -r O
+    if [ -z "${O}" ]; then
+      printf "Organization Name (eg, company) [Internet Widgits Pty Ltd]: "
+      read -r O
     fi
 
     # Organizational Unit
-    if [ -z "$OU" -a $INTERACT -eq 1 ]; then
-        printf "Organizational Unit Name (eg, section) []: "
-        read -r OU
+    if [ -z "${OU}" ]; then
+      printf "Organizational Unit Name (eg, section) []: "
+      read -r OU
     fi
+  fi
 
-    # Common Name
-    if [ -z "$CN" ]; then
-        printf "Common Name (e.g. server FQDN or YOUR name) []: "
-        read -r CN
-    fi
+  # Common Name
+  # This field is required and will ignore interactive rules
+  if [ -z "${CN}" ]; then
+    printf "Common Name (e.g. server FQDN or YOUR name) []: "
+    read -r CN
+  fi
 
-    # File name used for generating files
-    FILE="${CN/\*\./}"
+  # File name used for generating files
+  FILE="${CN/\*\./}"
 
-    # Subject Alternative Names
-    if [ -z "$SAN" -a -z "$HAS_CN" -a $INTERACT -eq 1 ]; then
-        printf "Subject Alternative Name(s) (e.g. subdomains) []: "
-        read -r SAN
-    fi
+  # Build subject alternative names
+  _build_san
 
-    # Build DNS
-    i=0
-    read -r -a URLS <<< "${CN} ${SAN//,/ }"
-    SAN=""
-    for u in "${URLS[@]}"; do
-        if [ -n "$u" ]; then
-            i=$((i+1))
-            SAN="${SAN}DNS.${i} = ${u// /}"$'\n'
-        fi
-    done
+  # Email Address
+  if [ -z "${EMAIL}" ] && [ $INTERACT -eq 1 ]; then
+    printf "Email Address []: "
+    read -r EMAIL
+  fi
 
-    # Email Address
-    if [ -z "$EMAIL" -a $INTERACT -eq 1 ]; then
-        printf "Email Address []: "
-        read -r EMAIL
-    fi
+  # Make sure output directory ends with a directory separator
+  if [ "${OUT: -1}" != "/" ]; then
+    OUT="${OUT}/"
+  fi
 
-    # Make sure output directory ends with a directory separator
-    if [ "${OUT: -1}" != "/" ]; then
-        OUT="${OUT}/"
+  # Check if output directory exists
+  if [ ! -d "${OUT}" ]; then
+    if [ $CREATE_PATH -eq 1 ]; then
+      # Create path
+      mkdir -p "${OUT}" \
+        || printf "Could not create directory '%s'\n" "${OUT}" \
+        && _safe_exit 1
+    else
+      # Report non-existent path
+      printf "The specified directory '%s' does not exist\n" "${OUT}"
+      _safe_exit 1
     fi
+  fi
 
-    # Check if output directory exists
-    if [ ! -d "$OUT" ]; then
-        if [ $CREATE_PATH -eq 1 ]; then
-            # Create path
-            mkdir -p "$OUT" || printf "Could not create directory '${OUT}'\n" && _safe_exit 1
-        else
-            # Report non-existent path
-            printf "The specified directory '${OUT}' does not exist\n"
-            _safe_exit 1
-        fi
-    fi
+  # Build certificate subject
+  _build_subj
 
-    # Build subject
-    if [ -n "$C" ]; then
-        SUBJ="${SUBJ}/C=${C}"
-    fi
-    if [ -n "$ST" ]; then
-        SUBJ="${SUBJ}/ST=${ST}"
-    fi
-    if [ -n "$L" ]; then
-        SUBJ="${SUBJ}/L=${L}"
-    fi
-    if [ -n "$O" ]; then
-        SUBJ="${SUBJ}/O=${O}"
-    fi
-    if [ -n "$OU" ]; then
-        SUBJ="${SUBJ}/OU=${OU}"
-    fi
-    if [ -n "$CN" ]; then
-        SUBJ="${SUBJ}/CN=${CN}"
-    fi
-    if [ -n "$EMAIL" ]; then
-        SUBJ="${SUBJ}/emailAddress=${EMAIL}"
-    fi
+  # Validate extfile if provided
+  if [ -n "${EXTFILE}" ] && [ ! -f "${EXTFILE}" ]; then
+    printf "The specified extfile '%s' does not exist\n" "${EXTFILE}"
+    _safe_exit 1
+  fi
 }
 
+#######################################
 # Trust certificate authority
-_add_trusted_cert() {
-    if [ -z "$TRUST" ]; then
-        return
-    fi
-
+# Globals:
+#   OSTYPE
+# Arguments:
+#   None
+#######################################
+_trust_ca() {
+  # Check if CA exists and script is instructed to trust
+  if [ -f "${CA_KEY}" ] && [ -f "${CA}" ] && [ -n "${TRUST}" ]; then
     case "${OSTYPE:-undefined}" in
-        # MacOS
-        darwin*) sudo security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" "$CA";;
-        # TODO: Implement certificate trusting for other systems
-        # linux*) ;;
-        *) printf "Error: Unsupported OSTYPE '${OSTYPE:-undefined}'\n"; EXIT_CODE=1;;
+      # MacOS
+      darwin*)
+        sudo security add-trusted-cert \
+          -d \
+          -r trustRoot \
+          -k "/Library/Keychains/System.keychain" \
+          "${CA}"
+        ;;
+      # TODO: Implement certificate trusting for other systems
+      # linux*) ;;
+      *)
+        printf "Error: Unsupported OSTYPE '%s'\n" "${OSTYPE:-undefined}"
+        EXIT_CODE=1
+        ;;
     esac
+  fi
 }
 
-# Build certificate authority
+#######################################
+# Generate certificate authority
+# Arguments:
+#   None
+#######################################
 _build_ca() {
-    # Return early if CA args are provided or only generating CSR
-    if [ -n "$CA" -a -n "$CA_KEY" -o -n "$CSR_ONLY" ]; then
-        return
-    fi
+  # Return early if CA args are provided or only generating CSR
+  if [ -n "${CA}" ] && [ -n "${CA_KEY}" ] || [ -n "${CSR_ONLY}" ]; then
+    return
+  fi
 
-    printf "Building certificate authority\n"
+  printf "Building certificate authority\n"
 
-    CA_KEY="${OUT}CA.key"
-    CA="${OUT}CA.pem"
+  CA_KEY="${OUT}CA.key"
+  CA="${OUT}CA.pem"
 
-    # Use existing CA in current directory
-    if [ -f "$CA_KEY" -a -f "$CA" ]; then
-        return
-    fi
+  # Use existing CA in current directory
+  if [ -f "${CA_KEY}" ] && [ -f "${CA}" ]; then
+    return
+  fi
 
-    # Generate certificate authority files
-    openssl genrsa -out "$CA_KEY" "$BITS"
-    openssl req -new -nodes -x509 -sha256 \
-        -subj "$SUBJ" \
-        -days "$DAYS" \
-        -key "$CA_KEY" \
-        -out "$CA"
-
-    # Trust certificate
-    _add_trusted_cert
+  # Generate certificate authority files
+  openssl genrsa -out "${CA_KEY}" "${BITS}"
+  openssl req -new -nodes -x509 -sha256 \
+    -subj "${SUBJ}" \
+    -days "${DAYS}" \
+    -key "${CA_KEY}" \
+    -out "${CA}"
 }
 
-# Build certificate signing request
+#######################################
+# Generate certificate signing request
+# Arguments:
+#   None
+#######################################
 _build_csr() {
-    # Return early if only building CA
-    if [ -n "$CA_ONLY" ]; then
-        return
-    fi
+  # Return early if only building CA
+  if [ -n "${CA_ONLY}" ]; then
+    return
+  fi
 
-    # Generate key and certificate signing request
-    openssl genrsa -out "${OUT}${FILE}.key" "$BITS"
-    openssl req -new -nodes -sha256 \
-        -subj "$SUBJ" \
-        -newkey "rsa:${BITS}" \
-        -key "${OUT}${FILE}.key" \
-        -out "${OUT}${FILE}.csr"
+  # Generate key and certificate signing request
+  openssl genrsa -out "${OUT}${FILE}.key" "${BITS}"
+  openssl req -new -nodes -sha256 \
+    -subj "${SUBJ}" \
+    -newkey "rsa:${BITS}" \
+    -key "${OUT}${FILE}.key" \
+    -out "${OUT}${FILE}.csr"
 }
 
-# Sign certificate
+#######################################
+# Generate signed certificate
+# Arguments:
+#   None
+#######################################
 _build_cert() {
-    # Return early if only building CA or CSR
-    if [ -n "$CA_ONLY" -o -n "$CSR_ONLY" ]; then
-        return
-    fi
+  # Return early if only building CA or CSR
+  if [ -n "${CA_ONLY}" ] || [ -n "${CSR_ONLY}" ]; then
+    return
+  fi
 
-    # Build extensions file if not provided
-    EXT="$EXTFILE"
-    if [ ! -f "$EXTFILE" ]; then
-        EXT="${OUT}${FILE}.ext"
+  # Build extensions file if not provided
+  EXT="${EXTFILE}"
+  if [ ! -f "${EXTFILE}" ]; then
+    EXT="${OUT}${FILE}.ext"
 
-        cat > "$EXT" << EOF
+    cat > "${EXT}" <<EOF
 authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
 keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
@@ -345,29 +429,34 @@ subjectAltName = @alt_names
 [alt_names]
 ${SAN}
 EOF
-    fi
+  fi
 
-    # Create a signed certificate
-    openssl x509 -req -sha256 -CAcreateserial \
-        -CA "$CA" \
-        -CAkey "$CA_KEY" \
-        -days "$DAYS" \
-        -extfile "$EXT" \
-        -in "${OUT}${FILE}.csr" \
-        -out "${OUT}${FILE}.crt"
+  # Create a signed certificate
+  openssl x509 -req -sha256 -CAcreateserial \
+    -CA "${CA}" \
+    -CAkey "${CA_KEY}" \
+    -days "${DAYS}" \
+    -extfile "${EXT}" \
+    -in "${OUT}${FILE}.csr" \
+    -out "${OUT}${FILE}.crt"
 
-    # Cleanup generated extensions file
-    if [ ! -f "$EXTFILE" ]; then
-        rm -f "$EXT"
-    fi
+  # Cleanup generated extensions file
+  if [ ! -f "${EXTFILE}" ]; then
+    rm -f "${EXT}"
+  fi
 }
 
+#######################################
 # Order of execution
-_parse_vars "$@"
-_check_vars
+#######################################
+_parse_args "$@"
+_validate_args
 _build_ca
+_trust_ca
 _build_csr
 _build_cert
 
-# Report success
+#######################################
+# Exit with code
+#######################################
 _safe_exit $EXIT_CODE
