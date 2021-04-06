@@ -39,8 +39,8 @@ self-signed-tls --ca-only --trust
 # Only create a certificate signing request
 self-signed-tls --csr-only
 
-# Generate a signed certificate using an existing certificate authority
-self-signed-tls --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem'
+# Generate a signed certificate using existing files
+self-signed-tls --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem' --csr='/path/to/EXAMPLE.csr'
 
 # Automate certificate generation
 self-signed-tls --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'

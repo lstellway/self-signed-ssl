@@ -118,8 +118,8 @@ _help() {
     # Only create a certificate signing request
     ${SCRIPT_NAME} --csr-only
 
-    # Generate a signed certificate using an existing certificate authority
-    ${SCRIPT_NAME} --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem'
+    # Generate a signed certificate using existing files
+    ${SCRIPT_NAME} --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem' --csr='/path/to/EXAMPLE.csr'
 
     # Automate certificate generation
     ${SCRIPT_NAME} --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
