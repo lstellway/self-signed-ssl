@@ -27,9 +27,14 @@ TRUST=""
 SUBJ=""
 
 #######################################
+# Certificate signing request
+#######################################
+CSR=""
+CSR_ONLY=""
+
+#######################################
 # Certificate / subject defaults
 #######################################
-CSR_ONLY=""
 EXTFILE=""
 DAYS=365 # 1 year
 C=""
@@ -142,6 +147,8 @@ _help() {
   Certificate Signing Request Options:
 
     --csr-only           Instructs script to solely generate a certificate signing request
+    --csr                Path to certificate signing request
+                         (Generates new certificate signing request if not set)
 
   Certificate Options:
 
@@ -200,6 +207,7 @@ _parse_args() {
       --ca-only) CA_ONLY=1;;
       -t|--trust) TRUST=1;;
       # CSR
+      --csr) CSR="${VALUE}";;
       --csr-only) CSR_ONLY=1;;
       # Cert
       --extfile) EXTFILE="${VALUE}";;
@@ -291,6 +299,12 @@ _validate_args() {
       printf "The specified certificate authorify file does not exist\n" >&2
       _safe_exit 1
     fi
+  fi
+
+  # Check CSR file
+  if [ -n "${CSR}" ] && [ ! -f "${CSR}" ]; then
+    printf "The specified certificate signing request file does not exist\n" >&2
+    _safe_exit 1
   fi
 
   # Interactive-only arguments
@@ -461,9 +475,12 @@ _build_ca() {
 #######################################
 _build_csr() {
   # Return early if only building CA
-  if [ -n "${CA_ONLY}" ]; then
+  if [ -n "${CA_ONLY}" ] || [ -f "${CSR}" ]; then
     return
   fi
+
+  # Point to generated CSR file
+  CSR="${OUT}${FILE}.csr"
 
   # Generate key and certificate signing request
   openssl genrsa -out "${OUT}${FILE}.key" "${BITS}"
@@ -471,7 +488,7 @@ _build_csr() {
     -subj "${SUBJ}" \
     -newkey "rsa:${BITS}" \
     -key "${OUT}${FILE}.key" \
-    -out "${OUT}${FILE}.csr"
+    -out "${CSR}"
 }
 
 #######################################
@@ -507,7 +524,7 @@ EOF
     -CAkey "${CA_KEY}" \
     -days "${DAYS}" \
     -extfile "${EXT}" \
-    -in "${OUT}${FILE}.csr" \
+    -in "${CSR}" \
     -out "${OUT}${FILE}.crt"
 
   # Cleanup generated extensions file
