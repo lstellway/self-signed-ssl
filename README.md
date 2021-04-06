@@ -57,6 +57,7 @@ self-signed-tls --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Ex
 | Option                        | Description                                                                                           |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `-h` `--help`                 | Display help and exit                                                                                 |
+| `-v` `--version               | Display the script version and exit                                                                   |
 | `-p VALUE` `--path=VALUE`     | Path to output generated keys                                                                         |
 | `-d VALUE` `--duration=VALUE` | Number of days the certificate is valid (default `365`)                                               |
 | `-b VALUE` `--bits=VALUE`     | Key size in bits (default `2048`)                                                                     |

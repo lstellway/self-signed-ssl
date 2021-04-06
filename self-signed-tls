@@ -5,6 +5,7 @@
 # Execute with help flag (-h|--help) for documentation. 
 
 set -e
+VERSION="0.2.1"
 
 #######################################
 # General defaults
@@ -122,6 +123,7 @@ _help() {
   General Options:
 
     -h|--help            Display this help and exit
+    -v|--version         Display the script version and exit
     -p|--path            Path to output generated files
     -d|--duration        Validity duration of the certificate (in days)
     -b|--bits            Key size in bits (default '2048')
@@ -166,7 +168,7 @@ EOF
 #######################################
 _parse_args() {
   while [ -n "$1" ]; do
-    if [[ " -h -t " =~ " $1 " ]]; then
+    if [[ " -h -v -t " =~ " $1 " ]]; then
       # Parse arguments without values
       ARG="${1}"
       VALUE=""
@@ -186,6 +188,7 @@ _parse_args() {
     case $ARG in
       # General
       -h|--help) _help; _safe_exit 0;;
+      -v|--version) printf "${SCRIPT_NAME} version: ${VERSION}\n"; _safe_exit 0;;
       -p|--path) OUT="${VALUE}";;
       --path-create) CREATE_PATH=1;;
       -d|--duration) DAYS="${VALUE}";;
