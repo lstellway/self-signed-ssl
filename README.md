@@ -20,7 +20,7 @@ brew install lstellway/formulae/self-signed-ssl
 **cURL**
 
 ```
-curl --output self-signed-tls https://raw.githubusercontent.com/lstellway/self-signed-ssl/master/self-signed-tls && chmod +x self-signed-tls
+curl --output self-signed-ssl https://raw.githubusercontent.com/lstellway/self-signed-ssl/master/self-signed-ssl && chmod +x self-signed-ssl
 ```
 
 <br />
@@ -28,22 +28,22 @@ curl --output self-signed-tls https://raw.githubusercontent.com/lstellway/self-s
 ## Usage
 
 ```shell
-self-signed-tls [OPTIONS]
+self-signed-ssl [OPTIONS]
 
 # Run with no arguments to be prompted for required values
-self-signed-tls
+self-signed-ssl
 
 # Only create a certificate authority and trust the generated certificate
-self-signed-tls --ca-only --trust
+self-signed-ssl --ca-only --trust
 
 # Only create a certificate signing request
-self-signed-tls --csr-only
+self-signed-ssl --csr-only
 
 # Generate a signed certificate using existing files
-self-signed-tls --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem' --csr='/path/to/EXAMPLE.csr'
+self-signed-ssl --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem' --csr='/path/to/EXAMPLE.csr'
 
 # Automate certificate generation
-self-signed-tls --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
+self-signed-ssl --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
 ```
 
 <br />
