@@ -5,7 +5,7 @@
 # Execute with help flag (-h|--help) for documentation. 
 
 set -e
-VERSION="0.2.1"
+VERSION="0.3.0"
 
 #######################################
 # General defaults
