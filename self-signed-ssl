@@ -119,7 +119,7 @@ _help() {
     ${SCRIPT_NAME} --csr-only
 
     # Generate a signed certificate using existing files
-    ${SCRIPT_NAME} --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem' --csr='/path/to/EXAMPLE.csr'
+    ${SCRIPT_NAME} --ca='/path/to/CA.pem' --ca-key='/path/to/CA.key' --csr='/path/to/EXAMPLE.csr'
 
     # Automate certificate generation
     ${SCRIPT_NAME} --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
@@ -136,19 +136,19 @@ _help() {
 
   Certificate Authority Options:
 
-    --ca-only            Instructs script to solely generate a certificate authority
-    --ca-cert            Path to certificate authority cert file
+    --ca                 Path to certificate authority cert file
                          (Generates new CA if not set)
     --ca-key             Path to certificate authority key file
                          (Generates new CA if not set)
+    --ca-only            Instructs script to solely generate a certificate authority
     -t|--trust           Flag to trust certificate authority
                          (Do not set for default 'false')
 
   Certificate Signing Request Options:
 
-    --csr-only           Instructs script to solely generate a certificate signing request
     --csr                Path to certificate signing request
                          (Generates new certificate signing request if not set)
+    --csr-only           Instructs script to solely generate a certificate signing request
 
   Certificate Options:
 
@@ -202,8 +202,8 @@ _parse_args() {
       -b|--bits) BITS="${VALUE}";;
       --no-interaction) INTERACT=0;;
       # CA
+      --ca|--ca-cert) CA="${VALUE}";;
       --ca-key) CA_KEY="${VALUE}";;
-      --ca-cert) CA="${VALUE}";;
       --ca-only) CA_ONLY=1;;
       -t|--trust) TRUST=1;;
       # CSR

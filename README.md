@@ -40,7 +40,7 @@ self-signed-ssl --ca-only --trust
 self-signed-ssl --csr-only
 
 # Generate a signed certificate using existing files
-self-signed-ssl --ca-key='/path/to/CA.key' --ca-cert='/path/to/CA.pem' --csr='/path/to/EXAMPLE.csr'
+self-signed-ssl --ca='/path/to/CA.pem' --ca-key='/path/to/CA.key' --csr='/path/to/EXAMPLE.csr'
 
 # Automate certificate generation
 self-signed-ssl --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Example Org' -u 'Example Unit' -n 'example.com' -a 'www.example.com'
@@ -67,12 +67,12 @@ self-signed-ssl --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Ex
 
 **Certificate Authority**
 
-| Option            | Description                                                                                                                               |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `--ca-key=VALUE`  | Path to certificate authority key file <br/>_(Generates new CA if not set)_                                                               |
-| `--ca-cert=VALUE` | Path to certificate authority cert file <br />_(Generates new CA if not set)_                                                             |
-| `--ca-only`       | Instructs script to solely generate a certificate authority                                                                               |
-| `-t` `--trust`    | Flag to trust certificate authority _(requires `sudo` privileges)_<br />_(Currently supports Darwin/MacOS, Fedora/CentOS, Debian/Ubuntu)_ |
+| Option           | Description                                                                                                                               |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `--ca=VALUE`     | Path to certificate authority cert file <br />_(Generates new CA if not set)_                                                             |
+| `--ca-key=VALUE` | Path to certificate authority key file <br/>_(Generates new CA if not set)_                                                               |
+| `--ca-only`      | Instructs script to solely generate a certificate authority                                                                               |
+| `-t` `--trust`   | Flag to trust certificate authority _(requires `sudo` privileges)_<br />_(Currently supports Darwin/MacOS, Fedora/CentOS, Debian/Ubuntu)_ |
 
 <br />
 
@@ -80,8 +80,8 @@ self-signed-ssl --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Ex
 
 | Option       | Description                                                                                        |
 | ------------ | -------------------------------------------------------------------------------------------------- |
-| `--csr-only` | Instructs script to solely generate a certificate signing request                                  |
 | `--csr`      | Path to certificate signing request <br />_(Generates new certificate signing request if not set)_ |
+| `--csr-only` | Instructs script to solely generate a certificate signing request                                  |
 
 <br />
 
