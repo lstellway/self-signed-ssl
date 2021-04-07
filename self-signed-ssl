@@ -12,8 +12,8 @@ VERSION="0.3.0"
 #######################################
 SCRIPT_NAME="$(basename "$0")"
 OUT="$(pwd)/"
-CREATE_PATH=0
-INTERACT=1
+CREATE_PATH=""
+INTERACT="1"
 BITS=2048
 EXIT_CODE=0
 
@@ -197,10 +197,10 @@ _parse_args() {
       -h|--help) _help; _safe_exit 0;;
       -v|--version) printf "${SCRIPT_NAME} version: ${VERSION}\n"; _safe_exit 0;;
       -p|--path) OUT="${VALUE}";;
-      --path-create) CREATE_PATH=1;;
+      --path-create) CREATE_PATH="1";;
       -d|--duration) DAYS="${VALUE}";;
       -b|--bits) BITS="${VALUE}";;
-      --no-interaction) INTERACT=0;;
+      --no-interaction) INTERACT="";;
       # CA
       --ca|--ca-cert) CA="${VALUE}";;
       --ca-key) CA_KEY="${VALUE}";;
@@ -236,7 +236,7 @@ _parse_args() {
 #######################################
 _build_san() {
   # Subject Alternative Names
-  if [ -z "${SAN}" ] && [ -z "${HAS_CN}" ] && [ $INTERACT -eq 1 ]; then
+  if [ -z "${SAN}" ] && [ -z "${HAS_CN}" ] && [ -n "${INTERACT}" ]; then
     printf "Subject Alternative Name(s) (e.g. subdomains) []: "
     read -r SAN
   fi
@@ -308,7 +308,7 @@ _validate_args() {
   fi
 
   # Interactive-only arguments
-  if [ $INTERACT -eq 1 ]; then
+  if [ -n "${INTERACT}" ]; then
     # Country
     if [ -z "${C}" ]; then
       printf "Country Name (2 letter code) [AU]: "
@@ -354,7 +354,7 @@ _validate_args() {
   _build_san
 
   # Email Address
-  if [ -z "${EMAIL}" ] && [ $INTERACT -eq 1 ]; then
+  if [ -z "${EMAIL}" ] && [ -n "${INTERACT}" ]; then
     printf "Email Address []: "
     read -r EMAIL
   fi
@@ -366,11 +366,9 @@ _validate_args() {
 
   # Check if output directory exists
   if [ ! -d "${OUT}" ]; then
-    if [ $CREATE_PATH -eq 1 ]; then
+    if [ -n "${CREATE_PATH}" ]; then
       # Create path
-      mkdir -p "${OUT}" \
-        || printf "Could not create directory '%s'\n" "${OUT}" >&2 \
-        && _safe_exit 1
+      mkdir -p "${OUT}"
     else
       # Report non-existent path
       printf "The specified directory '%s' does not exist\n" "${OUT}" >&2
