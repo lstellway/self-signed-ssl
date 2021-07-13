@@ -72,6 +72,7 @@ self-signed-ssl --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Ex
 | `--ca=VALUE`     | Path to certificate authority cert file <br />_(Generates new CA if not set)_                                                             |
 | `--ca-key=VALUE` | Path to certificate authority key file <br/>_(Generates new CA if not set)_                                                               |
 | `--ca-only`      | Instructs script to solely generate a certificate authority                                                                               |
+| `--ca-ext`       | Allow passing extensions to the CA request                                                                                                |
 | `-t` `--trust`   | Flag to trust certificate authority _(requires `sudo` privileges)_<br />_(Currently supports Darwin/MacOS, Fedora/CentOS, Debian/Ubuntu)_ |
 
 <br />
