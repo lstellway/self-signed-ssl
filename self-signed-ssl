@@ -23,6 +23,7 @@ EXIT_CODE=0
 CA_KEY=""
 CA=""
 CA_ONLY=""
+CA_EXT=""
 TRUST=""
 SUBJ=""
 
@@ -141,6 +142,7 @@ _help() {
     --ca-key             Path to certificate authority key file
                          (Generates new CA if not set)
     --ca-only            Instructs script to solely generate a certificate authority
+    --ca-ext             Allow passing extensions to the CA request
     -t|--trust           Flag to trust certificate authority
                          (Do not set for default 'false')
 
@@ -205,6 +207,7 @@ _parse_args() {
       --ca|--ca-cert) CA="${VALUE}";;
       --ca-key) CA_KEY="${VALUE}";;
       --ca-only) CA_ONLY=1;;
+      --ca-ext) CA_EXT="${VALUE}";;
       -t|--trust) TRUST=1;;
       # CSR
       --csr) CSR="${VALUE}";;
@@ -457,9 +460,15 @@ _build_ca() {
     return
   fi
 
+  EXT=""
+  if [ -n "${CA_EXT}" ]; then
+    EXT="-extensions ${CA_EXT}"
+  fi
+
   # Generate certificate authority files
   openssl genrsa -out "${CA_KEY}" "${BITS}"
   openssl req -new -nodes -x509 -sha256 \
+    $(printf "%s" "${EXT}") \
     -subj "${SUBJ}" \
     -days "${DAYS}" \
     -key "${CA_KEY}" \
