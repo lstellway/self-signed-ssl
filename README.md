@@ -2,7 +2,9 @@
 
 This script simplifies the creation of certificate authorities, signing requests and self-signed TLS certificates using OpenSSL.
 
-[![Self-Signed SSL - Introduction Video](https://img.youtube.com/vi/uiQW5QBnGRo/0.jpg)](https://www.youtube.com/watch?v=uiQW5QBnGRo)
+[Video Tutorial](https://www.youtube.com/watch?v=uiQW5QBnGRo)
+
+[![Self-Signed SSL - Introduction Video](.etc/thunbmail.gif)](https://www.youtube.com/watch?v=uiQW5QBnGRo)
 
 <br />
 
