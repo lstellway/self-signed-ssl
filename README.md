@@ -4,7 +4,7 @@ This script simplifies the creation of certificate authorities, signing requests
 
 [Video Tutorial](https://www.youtube.com/watch?v=uiQW5QBnGRo)
 
-[![Self-Signed SSL - Introduction Video](./.etc/thunbmail.gif)](https://www.youtube.com/watch?v=uiQW5QBnGRo)
+[![Self-Signed SSL - Introduction Video](./.etc/thumbnail.gif)](https://www.youtube.com/watch?v=uiQW5QBnGRo)
 
 <br />
 
