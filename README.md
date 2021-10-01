@@ -1,3 +1,10 @@
+**ANNOUNCEMENT**
+
+> I have released another PKI utility named [acert](https://github.com/lstellway/acert). <br />
+> It is a Golang project and independent of OpenSSL. <br />
+> Options, options... 🤔 
+
+
 # Self Signed SSL
 
 This script simplifies the creation of certificate authorities, signing requests and self-signed TLS certificates using OpenSSL.
@@ -110,3 +117,4 @@ self-signed-ssl --no-interaction -c 'US' -s 'California' -l 'Los Angeles' -o 'Ex
 
 -   [OpenSSL 1.1.1 Manual](https://www.openssl.org/docs/man1.1.1/man1/)
 -   [Issues / Feature Requests](https://github.com/lstellway/self-signed-ssl/issues)
+-   [Mozilla SSL Configuration Generator](https://ssl-config.mozilla.org/)
